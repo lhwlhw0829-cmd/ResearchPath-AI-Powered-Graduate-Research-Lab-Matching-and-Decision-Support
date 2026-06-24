@@ -183,7 +183,7 @@ MIT License — 자유롭게 사용·수정·배포 가능
 ## 💌 만든 이
 
 **이혜원 (Hyewon Lee)**  
-용인대학교 AI·빅데이터학과  
+AI·빅데이터학과  
 📧 [nina829@naver.com](mailto:nina829@naver.com)  
 🔗 자매 프로젝트: [Paper Translator v1](https://github.com/lhwlhw0829-cmd/Paper-Translator-Version-1)
 
