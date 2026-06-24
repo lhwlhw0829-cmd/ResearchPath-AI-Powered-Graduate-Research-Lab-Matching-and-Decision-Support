@@ -1,5 +1,3 @@
-# ResearchPath-AI-Powered-Graduate-Research-Lab-Matching-and-Decision-Support
-ResearchPath: AI-Powered Graduate Research Lab Matching and Decision Support
 # 🧭 ResearchPath
 
 > **이공계 학부생을 위한 대학원 연구실 의사결정 도우미**  

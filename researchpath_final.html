@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ResearchPath — 연구실 결정 & 논문 번역 도우미</title>
+<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+:root{
+  --bg:#F4F0FF;--bg2:#EAE4FF;--surface:#FFFFFF;--surface2:#F9F7FF;
+  --border:#E0D8F5;--border2:#C8BAE8;
+  --purple:#7C5CBF;--purple-l:#A07FD9;--purple-d:#5B3FA3;
+  --mint:#4BBFA5;--mint-d:#3AA08A;--mint-bg:#E8F8F4;--mint-bd:#A8DDD3;
+  --peach:#F4845F;--peach-bg:#FEF0EB;--peach-bd:#F4C8B8;
+  --sky:#5BA8D8;--sky-bg:#EBF5FC;
+  --yellow:#F0B429;--yellow-bg:#FEF9E7;
+  --red:#E05C5C;--green:#22C55E;
+  --text:#2D2640;--text2:#6B5E8A;--text3:#9C8FC0;
+  --radius:16px;--radius-sm:10px;
+  --shadow:0 2px 12px rgba(124,92,191,.09);
+  --shadow2:0 4px 24px rgba(124,92,191,.16);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;min-height:100vh;}
+
+/* ── APP TABS ── */
+.app-tab-bar{
+  position:sticky;top:0;z-index:30;background:var(--surface);
+  border-bottom:2px solid var(--border);display:flex;
+}
+.app-tab{
+  flex:1;padding:14px 8px;text-align:center;font-size:13px;font-weight:600;
+  color:var(--text3);cursor:pointer;border-bottom:3px solid transparent;
+  transition:all .2s;background:none;border-top:none;border-left:none;border-right:none;
+  font-family:inherit;
+}
+.app-tab.on{color:var(--purple);border-bottom-color:var(--purple);}
+.app-tab:hover{color:var(--purple-l);background:var(--bg2);}
+.app-page{display:none;}
+.app-page.on{display:block;}
+
+/* ── SHELL ── */
+.shell{max-width:520px;margin:0 auto;min-height:100vh;}
+.screen{display:none;padding-bottom:80px;}
+.screen.on{display:block;}
+
+/* ── TOPBAR ── */
+.topbar{padding:16px 20px 14px;background:var(--surface);border-bottom:1.5px solid var(--border);position:sticky;top:48px;z-index:20;}
+.topbar-row{display:flex;align-items:center;justify-content:space-between;}
+.logo{font-size:19px;font-weight:700;color:var(--purple);display:flex;align-items:center;gap:6px;}
+.logo-sub{font-size:11px;color:var(--text3);margin-top:3px;}
+.admin-btn{font-size:12px;color:var(--text3);background:var(--surface2);border:1.5px solid var(--border);padding:6px 12px;border-radius:20px;cursor:pointer;font-family:inherit;}
+.admin-btn:hover{border-color:var(--purple-l);color:var(--purple);}
+.steps{display:flex;gap:5px;margin-top:10px;}
+.step-dot{width:22px;height:4px;border-radius:2px;background:var(--border2);transition:background .3s;}
+.step-dot.on{background:var(--purple);}
+.step-dot.done{background:var(--mint);}
+
+/* ── INNER ── */
+.inner{padding:18px 20px;}
+.sec{font-size:12px;font-weight:700;color:var(--purple-l);letter-spacing:.6px;text-transform:uppercase;margin:20px 0 8px;}
+.lead{font-size:13px;color:var(--text3);line-height:1.6;margin-bottom:8px;}
+
+/* ── CHIPS ── */
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:6px;}
+.chip{padding:7px 13px;border:1.5px solid var(--border2);border-radius:20px;color:var(--text2);font-size:13px;cursor:pointer;transition:all .18s;background:var(--surface);font-family:inherit;}
+.chip:hover{border-color:var(--purple-l);color:var(--purple);}
+.chip.on{background:var(--purple);border-color:var(--purple);color:#fff;font-weight:600;}
+
+/* ── INPUTS ── */
+.tag-input-row{display:flex;gap:8px;margin-top:6px;}
+.tag-input{flex:1;padding:9px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:13px;font-family:inherit;}
+.tag-input:focus{outline:none;border-color:var(--purple-l);}
+.tag-add-btn{padding:9px 14px;border:none;border-radius:var(--radius-sm);background:var(--purple);color:#fff;font-size:13px;cursor:pointer;font-family:inherit;}
+.tag-add-btn:hover{background:var(--purple-d);}
+.sel-wrap{position:relative;}
+select{width:100%;padding:11px 16px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--surface);color:var(--text);appearance:none;cursor:pointer;font-family:inherit;}
+select:focus{outline:none;border-color:var(--purple-l);}
+.sel-arrow{position:absolute;right:13px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none;font-size:11px;}
+.career-custom{width:100%;margin-top:8px;padding:9px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:13px;font-family:inherit;display:none;}
+.career-custom.show{display:block;}
+
+/* ── BUTTONS ── */
+.btn{width:100%;padding:13px;border:none;border-radius:var(--radius-sm);background:var(--purple);color:#fff;font-size:14px;font-weight:700;cursor:pointer;margin-top:16px;transition:all .18s;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn:hover{background:var(--purple-d);transform:translateY(-1px);box-shadow:var(--shadow2);}
+.btn:active{transform:translateY(0);}
+.btn.ghost{background:transparent;color:var(--purple);border:1.5px solid var(--purple-l);}
+.btn.ghost:hover{background:var(--bg2);transform:none;box-shadow:none;}
+.btn.mint{background:var(--mint);}
+.btn.mint:hover{background:var(--mint-d);}
+.btn.sm{padding:8px 13px;font-size:12px;width:auto;margin-top:0;}
+.btn.danger{background:var(--red);}
+
+/* ── LAB CARDS ── */
+.lab-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:14px;transition:all .2s;box-shadow:var(--shadow);}
+.lab-card:hover{border-color:var(--purple-l);box-shadow:var(--shadow2);}
+.lab-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px;}
+.lab-name{font-size:15px;font-weight:700;color:var(--text);flex:1;}
+.lab-rank{font-size:11px;font-weight:700;padding:3px 9px;border-radius:10px;background:var(--yellow-bg);color:var(--yellow);border:1px solid #F9E99A;white-space:nowrap;}
+.lab-rank.top{background:var(--mint-bg);color:var(--mint-d);border-color:var(--mint-bd);}
+.lab-meta{font-size:12px;color:var(--text3);margin-bottom:10px;}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;}
+.tag{font-size:11px;padding:3px 9px;border-radius:12px;background:var(--bg2);color:var(--purple);border:1px solid var(--border2);}
+.match-row{display:flex;align-items:center;gap:9px;margin-bottom:12px;}
+.match-score{font-size:12px;font-weight:700;color:var(--mint-d);white-space:nowrap;}
+.match-bar-bg{flex:1;height:5px;background:var(--border);border-radius:3px;}
+.match-bar{height:5px;background:linear-gradient(90deg,var(--mint),var(--purple-l));border-radius:3px;transition:width .5s ease;}
+.axis{border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:11px 13px;margin-top:8px;font-size:13px;line-height:1.5;background:var(--surface2);}
+.axis-label{font-size:10.5px;font-weight:700;color:var(--text3);margin-bottom:5px;letter-spacing:.5px;text-transform:uppercase;}
+.axis p{color:var(--text2);}
+.axis.key{border-color:var(--mint-bd);background:var(--mint-bg);}
+.axis.key .axis-label{color:var(--mint-d);}
+.axis.key p{color:#2D8A74;}
+.axis.peach{border-color:var(--peach-bd);background:var(--peach-bg);}
+.axis.peach .axis-label{color:var(--peach);}
+.axis.peach p{color:#B85A3A;}
+.paper-title{font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:5px;}
+.paper-link{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--sky);text-decoration:none;border:1px solid var(--sky);padding:3px 8px;border-radius:8px;background:var(--sky-bg);margin-top:4px;transition:all .15s;}
+.paper-link:hover{background:var(--sky);color:#fff;}
+.easy-pill{display:inline-block;font-size:11px;padding:3px 9px;background:var(--mint-bg);color:var(--mint-d);border-radius:10px;border:1px solid var(--mint-bd);margin-top:5px;}
+.contract-badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:5px 11px;background:var(--peach-bg);color:var(--peach);border-radius:12px;border:1px solid var(--peach-bd);margin-top:7px;}
+.card-btns{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
+.card-btn{flex:1;min-width:110px;padding:9px 12px;border:none;border-radius:var(--radius-sm);font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:5px;}
+.card-btn.mail-btn{background:var(--purple);color:#fff;}
+.card-btn.mail-btn:hover{background:var(--purple-d);}
+.card-btn.ai-btn{background:var(--mint-bg);color:var(--mint-d);border:1.5px solid var(--mint-bd);}
+.card-btn.ai-btn:hover{background:var(--mint);color:#fff;}
+.card-btn.trans-btn{background:var(--sky-bg);color:var(--sky);border:1.5px solid var(--sky);}
+.card-btn.trans-btn:hover{background:var(--sky);color:#fff;}
+
+/* ── FILTER BAR ── */
+.filter-bar{display:flex;align-items:center;gap:8px;padding:10px 20px;background:var(--surface);border-bottom:1.5px solid var(--border);overflow-x:auto;scrollbar-width:none;}
+.filter-bar::-webkit-scrollbar{display:none;}
+.filter-chip{padding:5px 12px;border:1.5px solid var(--border2);border-radius:16px;font-size:12px;color:var(--text2);cursor:pointer;white-space:nowrap;background:var(--surface);font-family:inherit;transition:all .15s;}
+.filter-chip.on{background:var(--purple);border-color:var(--purple);color:#fff;}
+.result-count{font-size:12px;color:var(--text3);white-space:nowrap;margin-left:auto;flex-shrink:0;}
+
+/* ── MAIL ── */
+.mail-lab-badge{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:12px;}
+.mail-lab-badge .dot{width:9px;height:9px;border-radius:50%;background:var(--mint);flex-shrink:0;}
+.mail-lab-badge span{font-size:13px;color:var(--text2);}
+.mail-box{white-space:pre-wrap;background:#2D2640;color:#E2DBFF;border-radius:var(--radius-sm);padding:16px;font-size:12.5px;line-height:1.7;border:1.5px solid var(--border2);}
+.hint{font-size:12px;color:var(--mint-d);margin:8px 0 12px;display:flex;align-items:center;gap:6px;}
+.mail-platforms{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
+.platform-btn{flex:1;min-width:100px;padding:10px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;border:none;transition:all .18s;}
+.platform-btn.naver{background:#03C75A;color:#fff;}
+.platform-btn.naver:hover{background:#02A64C;}
+.platform-btn.google{background:#EA4335;color:#fff;}
+.platform-btn.google:hover{background:#C5372C;}
+.platform-btn.copy-btn{background:var(--purple);color:#fff;}
+.platform-btn.copy-btn:hover{background:var(--purple-d);}
+
+/* ── AI PANEL ── */
+.ai-panel{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px;margin-top:14px;}
+.ai-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.ai-badge{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:8px;background:var(--yellow-bg);color:var(--yellow);border:1px solid #F9E99A;}
+.ai-badge.connected{background:#D1FAE5;color:#065F46;border-color:#6EE7B7;}
+.ai-chat{max-height:260px;overflow-y:auto;margin-bottom:12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px;background:var(--surface2);}
+.ai-msg{margin-bottom:10px;font-size:13px;line-height:1.6;}
+.ai-msg.user{text-align:right;}
+.ai-bubble{display:inline-block;padding:8px 12px;border-radius:12px;max-width:85%;}
+.ai-msg.user .ai-bubble{background:var(--purple);color:#fff;}
+.ai-msg.bot .ai-bubble{background:var(--surface);border:1.5px solid var(--border);color:var(--text);}
+.ai-msg.bot .ai-bubble.loading{color:var(--text3);font-style:italic;}
+.ai-input-row{display:flex;gap:8px;}
+.ai-input{flex:1;padding:9px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--surface);color:var(--text);}
+.ai-input:focus{outline:none;border-color:var(--purple-l);}
+.ai-send{padding:9px 14px;border:none;border-radius:var(--radius-sm);background:var(--purple);color:#fff;font-size:13px;cursor:pointer;font-family:inherit;}
+.ai-send:hover{background:var(--purple-d);}
+.api-setup{background:var(--yellow-bg);border:1.5px solid #F9E99A;border-radius:var(--radius-sm);padding:12px;margin-bottom:12px;font-size:12.5px;}
+.api-setup p{color:#8A6A00;line-height:1.5;}
+.api-input-row{display:flex;gap:8px;margin-top:8px;}
+.api-input{flex:1;padding:8px 12px;border:1.5px solid #F9D900;border-radius:var(--radius-sm);font-size:12.5px;font-family:inherit;background:#fff;color:var(--text);}
+.api-input:focus{outline:none;border-color:var(--yellow);}
+.api-save{padding:8px 12px;border:none;border-radius:var(--radius-sm);background:var(--yellow);color:#fff;font-size:12px;cursor:pointer;font-family:inherit;}
+.ai-suggestions{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.ai-suggestion{padding:5px 11px;border:1.5px solid var(--purple-l);border-radius:14px;font-size:11.5px;color:var(--purple);cursor:pointer;background:var(--bg2);font-family:inherit;transition:all .15s;}
+.ai-suggestion:hover{background:var(--purple);color:#fff;}
+
+/* ── TRANSLATOR ── */
+.trans-wrap{padding:18px 20px;max-width:520px;margin:0 auto;}
+.trans-header{padding:20px;background:var(--surface);border-bottom:1.5px solid var(--border);text-align:center;}
+.trans-header h1{font-size:20px;font-weight:700;color:var(--purple);}
+.trans-header p{font-size:12px;color:var(--text3);margin-top:4px;}
+.trans-panel{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:14px;box-shadow:var(--shadow);}
+.trans-panel h3{font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.trans-row{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+.trans-row .sel-wrap{flex:1;min-width:120px;}
+.trans-row select{font-size:12.5px;padding:9px 12px;}
+.trans-row .sel-arrow{font-size:10px;}
+.upload-area{border:2px dashed var(--border2);border-radius:var(--radius-sm);padding:28px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface2);}
+.upload-area:hover{border-color:var(--purple-l);background:var(--bg2);}
+.upload-area.dragover{border-color:var(--purple);background:var(--bg2);}
+.upload-area .upload-icon{font-size:32px;margin-bottom:8px;}
+.upload-area p{font-size:13px;color:var(--text2);}
+.upload-area small{font-size:11px;color:var(--text3);}
+.file-list{margin-top:10px;}
+.file-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;font-size:12.5px;}
+.file-item .fname{color:var(--text);font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.file-item .fsize{color:var(--text3);font-size:11px;margin:0 8px;}
+.file-remove{background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;padding:0 2px;}
+.file-remove:hover{color:var(--red);}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2);}
+.toggle-row:last-child{border-bottom:none;}
+.toggle{position:relative;display:inline-block;width:40px;height:22px;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:var(--border2);border-radius:11px;transition:.3s;}
+.toggle-slider:before{content:"";position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;}
+.toggle input:checked + .toggle-slider{background:var(--purple);}
+.toggle input:checked + .toggle-slider:before{transform:translateX(18px);}
+.trans-progress{margin-top:12px;display:none;}
+.progress-bar-bg{height:8px;background:var(--border);border-radius:4px;overflow:hidden;}
+.progress-bar{height:8px;background:linear-gradient(90deg,var(--mint),var(--purple-l));border-radius:4px;transition:width .3s;width:0%;}
+.progress-label{font-size:12px;color:var(--text3);margin-top:5px;text-align:center;}
+.trans-result-box{white-space:pre-wrap;background:#F9F7FF;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:14px;font-size:13px;line-height:1.7;color:var(--text);max-height:320px;overflow-y:auto;margin-top:10px;}
+.keyword-pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.keyword-pill{padding:4px 10px;background:var(--mint-bg);color:var(--mint-d);border:1px solid var(--mint-bd);border-radius:12px;font-size:11.5px;}
+.ref-item{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;margin:4px 0;font-size:12px;color:var(--text2);}
+.dl-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.dl-btn{flex:1;min-width:80px;padding:9px;border:none;border-radius:var(--radius-sm);font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;text-align:center;}
+.dl-btn.txt{background:var(--surface2);color:var(--text2);border:1.5px solid var(--border);}
+.dl-btn.txt:hover{border-color:var(--purple-l);}
+
+/* ── QA TAB ── */
+.qa-tab-bar{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+.qa-tab{padding:7px 14px;border:1.5px solid var(--border2);border-radius:16px;font-size:12.5px;color:var(--text2);cursor:pointer;background:var(--surface);font-family:inherit;transition:all .15s;}
+.qa-tab.on{background:var(--purple);border-color:var(--purple);color:#fff;}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:44px 20px;color:var(--text3);}
+.empty-icon{font-size:40px;margin-bottom:12px;}
+.empty p{font-size:14px;line-height:1.7;}
+
+/* ── CONTACT FOOTER ── */
+.contact-footer{margin-top:20px;padding:14px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);text-align:center;}
+.contact-footer p{font-size:12px;color:var(--text3);line-height:1.7;}
+.contact-footer a{color:var(--purple);text-decoration:none;font-weight:600;}
+.contact-footer a:hover{text-decoration:underline;}
+
+/* ── MODALS ── */
+.modal-bg{position:fixed;inset:0;background:rgba(45,38,64,.55);z-index:100;display:none;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;backdrop-filter:blur(2px);}
+.modal-bg.on{display:flex;}
+.modal{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);width:100%;max-width:500px;padding:24px;margin:auto;box-shadow:var(--shadow2);}
+.modal-close{float:right;background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer;line-height:1;}
+.modal-close:hover{color:var(--text);}
+.modal-title{font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.modal-sub{font-size:13px;color:var(--text3);margin-bottom:18px;}
+.form-group{margin-bottom:13px;}
+.form-label{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:5px;display:block;}
+.form-input,.form-textarea{width:100%;padding:9px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-size:13px;font-family:inherit;}
+.form-input:focus,.form-textarea:focus{outline:none;border-color:var(--purple-l);}
+.form-textarea{resize:vertical;min-height:60px;}
+.form-row{display:flex;gap:10px;}
+.form-row .form-group{flex:1;}
+.form-hint-text{font-size:11px;color:var(--text3);margin-top:3px;}
+.divider{border:none;border-top:1.5px solid var(--border);margin:16px 0;}
+.form-err{color:var(--red);font-size:12px;margin-top:8px;min-height:16px;}
+.admin-lab-item{background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:13px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.admin-lab-info{flex:1;min-width:0;}
+.admin-lab-name{font-size:13.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.admin-lab-meta{font-size:11.5px;color:var(--text3);margin-top:2px;}
+.admin-btns{display:flex;gap:6px;flex-shrink:0;}
+.pw-wrap{text-align:center;padding:8px 0 0;}
+.pw-title{font-size:17px;font-weight:700;margin-bottom:6px;}
+.pw-sub{font-size:13px;color:var(--text3);margin-bottom:20px;}
+.pw-input{width:100%;max-width:260px;padding:12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-size:16px;text-align:center;letter-spacing:4px;font-family:inherit;}
+.pw-input:focus{outline:none;border-color:var(--purple-l);}
+.pw-err{color:var(--red);font-size:12px;margin-top:8px;min-height:16px;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:86px;left:50%;transform:translateX(-50%);background:var(--purple);color:#fff;padding:10px 22px;border-radius:24px;font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s;z-index:300;white-space:nowrap;box-shadow:var(--shadow2);}
+.toast.show{opacity:1;}
+.back-btn{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--text3);background:none;border:none;cursor:pointer;padding:0;font-family:inherit;}
+.back-btn:hover{color:var(--purple);}
+.selected-lab-badge{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px;}
+.selected-lab-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--mint);flex-shrink:0;}
+.selected-lab-badge span{font-size:13px;color:var(--text2);}
+.status-box{padding:10px 13px;border-radius:var(--radius-sm);font-size:13px;margin:6px 0;}
+.status-box.info{background:var(--sky-bg);color:var(--sky);border:1px solid var(--sky);}
+.status-box.ok{background:var(--mint-bg);color:var(--mint-d);border:1px solid var(--mint-bd);}
+.status-box.warn{background:var(--yellow-bg);color:#8A6A00;border:1px solid #F9E99A;}
+.status-box.err{background:#FEF2F2;color:var(--red);border:1px solid #FECACA;}
+</style>
+</head>
+<body>
+
+<!-- ══ APP TAB BAR ══ -->
+<div class="app-tab-bar">
+  <button class="app-tab on" onclick="switchApp('app-rp')">🧭 ResearchPath</button>
+  <button class="app-tab" onclick="switchApp('app-trans')">📄 논문 번역기</button>
+</div>
+
+<!-- ══════════════ RESEARCHPATH APP ══════════════ -->
+<div class="app-page on" id="app-rp">
+<div class="shell">
+
+<!-- S1: MAIN -->
+<div class="screen on" id="s1">
+  <div class="topbar" style="top:48px">
+    <div class="topbar-row">
+      <div>
+        <div class="logo">🧭 Research<span style="color:var(--mint-d)">Path</span></div>
+        <div class="logo-sub">이공계 대학원 컨택 의사결정 도우미</div>
+      </div>
+      <button class="admin-btn" onclick="openAdminAuth()">⚙ 관리자</button>
+    </div>
+    <div class="steps" style="margin-top:10px">
+      <div class="step-dot on"></div><div class="step-dot"></div><div class="step-dot"></div>
+    </div>
+  </div>
+  <div class="inner">
+    <div class="sec">📌 관심 분야 선택</div>
+    <div class="lead">여러 개 선택 가능 · 직접 추가도 됩니다</div>
+    <div class="chips" id="chip-container"></div>
+    <div class="tag-input-row">
+      <input class="tag-input" id="custom-tag" placeholder="직접 입력 (예: NLP, 로보틱스…)" maxlength="20" onkeydown="if(event.key==='Enter')addCustomTag()">
+      <button class="tag-add-btn" onclick="addCustomTag()">+ 추가</button>
+    </div>
+    <div class="sec" style="margin-top:20px">🎯 진로 우선순위</div>
+    <div class="sel-wrap">
+      <select id="career" onchange="toggleCareerCustom()">
+        <option value="any">상관없음</option>
+        <option value="contract">계약대학원 / 취업연계 우선</option>
+        <option value="academic">박사·연구자 진학</option>
+        <option value="startup">스타트업·창업 연계</option>
+        <option value="custom">직접 입력...</option>
+      </select>
+      <span class="sel-arrow">▼</span>
+    </div>
+    <input class="career-custom" id="career-custom-input" placeholder="진로 목표를 직접 입력하세요" maxlength="40">
+    <button class="btn" onclick="go2()">연구실 추천받기 &nbsp;→</button>
+    <div class="contact-footer" style="margin-top:24px">
+      <p>💌 문의 · 피드백 &nbsp;<a href="mailto:nina829@naver.com">nina829@naver.com</a></p>
+      <p style="margin-top:6px;font-size:11px">논문 번역 → <a href="#" onclick="switchApp('app-trans');return false">📄 번역기 탭 바로가기</a> · <a href="https://github.com/lhwlhw0829-cmd/Paper-Translator-Version-1" target="_blank">GitHub</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- S2: RESULTS -->
+<div class="screen" id="s2">
+  <div class="topbar" style="top:48px">
+    <div class="topbar-row">
+      <button class="back-btn" onclick="show('s1')">← 다시 선택</button>
+    </div>
+    <div class="logo" style="margin-top:6px">추천 연구실 <span id="result-badge" style="font-size:13px;color:var(--text3);font-weight:400"></span></div>
+    <div class="logo-sub" style="margin-top:3px">초록 ⭐ 축 = 내가 중요하게 고른 항목</div>
+    <div class="steps" style="margin-top:10px">
+      <div class="step-dot done"></div><div class="step-dot on"></div><div class="step-dot"></div>
+    </div>
+  </div>
+  <div class="filter-bar" id="filter-bar"></div>
+  <div class="inner">
+    <div id="list"></div>
+    <div id="no-result" class="empty" style="display:none">
+      <div class="empty-icon">🔍</div>
+      <p>조건에 맞는 연구실이 없어요.<br>분야를 더 추가하거나 필터를 바꿔보세요.</p>
+      <button class="btn ghost" onclick="show('s1')" style="margin-top:16px">← 다시 선택</button>
+    </div>
+    <div class="contact-footer"><p>💌 연구실 데이터 추가 요청 · <a href="mailto:nina829@naver.com">nina829@naver.com</a></p></div>
+  </div>
+</div>
+
+<!-- S3: MAIL -->
+<div class="screen" id="s3">
+  <div class="topbar" style="top:48px">
+    <div class="topbar-row"><button class="back-btn" onclick="show('s2')">← 결정카드로</button></div>
+    <div class="logo" style="margin-top:6px">✉️ 컨택 메일</div>
+    <div class="logo-sub" style="margin-top:3px">복사 후 이력서만 첨부하세요</div>
+    <div class="steps" style="margin-top:10px">
+      <div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot on"></div>
+    </div>
+  </div>
+  <div class="inner">
+    <div class="mail-lab-badge" id="mail-lab-badge"></div>
+    <div class="hint">✦ 아래 초안을 그대로 보내도 됩니다. [이름]/[학교]만 채워주세요.</div>
+    <div class="mail-box" id="mail"></div>
+    <div style="font-size:11.5px;color:var(--text3);margin-top:14px;margin-bottom:6px;">메일 앱으로 바로 이동 →</div>
+    <div class="mail-platforms">
+      <button class="platform-btn naver" onclick="openNaver()">📧 네이버 메일</button>
+      <button class="platform-btn google" onclick="openGmail()">📨 Gmail</button>
+      <button class="platform-btn copy-btn" onclick="copyMail()">📋 복사하기</button>
+    </div>
+    <button class="btn ghost" onclick="show('s1')" style="margin-top:12px">처음부터 다시하기</button>
+  </div>
+</div>
+
+<!-- S4: AI Q&A -->
+<div class="screen" id="s4">
+  <div class="topbar" style="top:48px">
+    <div class="topbar-row"><button class="back-btn" onclick="show('s2')">← 결정카드로</button></div>
+    <div class="logo" style="margin-top:6px">🤖 AI 연구실 상담</div>
+    <div class="logo-sub" style="margin-top:3px">이 연구실에 대해 뭐든 물어보세요</div>
+  </div>
+  <div class="inner">
+    <div class="selected-lab-badge" id="ai-lab-badge"></div>
+    <div class="ai-panel">
+      <div class="ai-header">
+        <span style="font-size:14px;font-weight:700;color:var(--text)">AI 상담 패널</span>
+        <span class="ai-badge" id="ai-status-badge">API 미설정</span>
+      </div>
+      <div class="api-setup" id="api-setup-box">
+        <p><strong>🔑 Anthropic API 키를 입력하면 실제 AI 답변이 활성화됩니다.</strong><br>키가 없으면 데모 모드로 체험 가능해요.</p>
+        <div class="api-input-row">
+          <input class="api-input" id="api-key-input" type="password" placeholder="sk-ant-api…">
+          <button class="api-save" onclick="saveApiKey()">저장</button>
+        </div>
+      </div>
+      <div class="ai-suggestions" id="ai-suggestions"></div>
+      <div class="ai-chat" id="ai-chat"></div>
+      <div class="ai-input-row">
+        <input class="ai-input" id="ai-input" placeholder="궁금한 것을 입력하세요…" onkeydown="if(event.key==='Enter')sendAi()">
+        <button class="ai-send" onclick="sendAi()">→</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /shell -->
+</div><!-- /app-rp -->
+
+<!-- ══════════════ TRANSLATOR APP ══════════════ -->
+<div class="app-page" id="app-trans">
+<div class="trans-header">
+  <h1>📄 논문 번역기 Pro</h1>
+  <p>PDF 업로드 → AI 번역 · 요약 · 키워드 · Q&A · 다운로드</p>
+  <p style="font-size:11px;margin-top:2px;color:var(--text3)">Paper Translator v1 웹 통합 버전 · <a href="https://github.com/lhwlhw0829-cmd/Paper-Translator-Version-1" target="_blank" style="color:var(--purple)">GitHub 전체 버전 보기</a></p>
+</div>
+<div class="trans-wrap">
+
+  <!-- API 설정 -->
+  <div class="trans-panel">
+    <h3>⚙️ API 설정</h3>
+    <div class="form-group">
+      <label class="form-label">OpenAI API Key (번역용)</label>
+      <input class="form-input" id="t-openai-key" type="password" placeholder="sk-…" oninput="updateTransApiStatus()">
+    </div>
+    <div class="form-group" style="margin-bottom:0">
+      <label class="form-label">Anthropic API Key (Q&A용, 선택)</label>
+      <input class="form-input" id="t-claude-key" type="password" placeholder="sk-ant-api…">
+    </div>
+    <div id="t-api-status" style="font-size:12px;color:var(--text3);margin-top:8px;"></div>
+  </div>
+
+  <!-- 번역 설정 -->
+  <div class="trans-panel">
+    <h3>🌐 번역 설정</h3>
+    <div class="trans-row">
+      <div class="sel-wrap">
+        <select id="t-model">
+          <option value="gpt-4o-mini">gpt-4o-mini (빠름·경제적)</option>
+          <option value="gpt-4o">gpt-4o (고품질)</option>
+          <option value="gpt-4-turbo">gpt-4-turbo</option>
+        </select>
+        <span class="sel-arrow">▼</span>
+      </div>
+      <div class="sel-wrap">
+        <select id="t-target">
+          <option value="한국어">한국어</option>
+          <option value="영어">영어</option>
+          <option value="일본어">일본어</option>
+          <option value="중국어(간체)">중국어(간체)</option>
+        </select>
+        <span class="sel-arrow">▼</span>
+      </div>
+    </div>
+    <div class="sel-wrap">
+      <select id="t-style">
+        <option value="학술 격식체 (~이다/~하였다)">학술 격식체 (~이다/~하였다)</option>
+        <option value="구어체 (~해요/~거든요)">구어체 (~해요/~거든요)</option>
+        <option value="신문 기사체 (~했다/~이다)">신문 기사체 (~했다/~이다)</option>
+        <option value="교과서체 (~합니다/~입니다)">교과서체 (~합니다/~입니다)</option>
+      </select>
+      <span class="sel-arrow">▼</span>
+    </div>
+  </div>
+
+  <!-- 파일 업로드 -->
+  <div class="trans-panel">
+    <h3>📁 PDF 업로드</h3>
+    <div class="upload-area" id="upload-area" onclick="document.getElementById('pdf-input').click()" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+      <div class="upload-icon">📄</div>
+      <p>PDF를 클릭하거나 드래그해서 올리세요</p>
+      <small>여러 파일 동시 업로드 가능 · 최대 50MB</small>
+    </div>
+    <input type="file" id="pdf-input" accept=".pdf" multiple style="display:none" onchange="onFileSelect(event)">
+    <div class="file-list" id="file-list"></div>
+  </div>
+
+  <!-- 옵션 -->
+  <div class="trans-panel">
+    <h3>🔧 번역 옵션</h3>
+    <div class="toggle-row">
+      <span>수식 보존 ($…$ 플레이스홀더)</span>
+      <label class="toggle"><input type="checkbox" id="t-formula" checked><span class="toggle-slider"></span></label>
+    </div>
+    <div class="toggle-row">
+      <span>전문용어 원문 병기 (번역어(원문))</span>
+      <label class="toggle"><input type="checkbox" id="t-terms" checked><span class="toggle-slider"></span></label>
+    </div>
+    <div class="toggle-row">
+      <span>논문 요약 자동 생성</span>
+      <label class="toggle"><input type="checkbox" id="t-summary"><span class="toggle-slider"></span></label>
+    </div>
+    <div class="toggle-row">
+      <span>핵심 키워드 추출</span>
+      <label class="toggle"><input type="checkbox" id="t-keywords"><span class="toggle-slider"></span></label>
+    </div>
+    <div class="toggle-row">
+      <span>참고문헌 자동 정리</span>
+      <label class="toggle"><input type="checkbox" id="t-refs"><span class="toggle-slider"></span></label>
+    </div>
+    <div class="form-group" style="margin-top:12px;margin-bottom:0">
+      <label class="form-label">번역 전 요청사항</label>
+      <textarea class="form-textarea" id="t-before" placeholder="예: 의학 전문용어 사용 / 능동태로 번역" style="min-height:52px"></textarea>
+    </div>
+    <div class="form-group" style="margin-top:10px;margin-bottom:0">
+      <label class="form-label">번역 후 수정 요청</label>
+      <textarea class="form-textarea" id="t-after" placeholder="예: 더 자연스럽게 다듬어라" style="min-height:40px"></textarea>
+    </div>
+  </div>
+
+  <!-- 번역 시작 -->
+  <button class="btn" id="trans-start-btn" onclick="startTranslation()">🚀 번역 시작</button>
+
+  <!-- 진행 상태 -->
+  <div class="trans-progress" id="trans-progress">
+    <div id="t-status-box" class="status-box info">준비 중...</div>
+    <div class="progress-bar-bg" style="margin-top:8px"><div class="progress-bar" id="t-progress-bar"></div></div>
+    <div class="progress-label" id="t-progress-label"></div>
+  </div>
+
+  <!-- 결과 패널 (탭) -->
+  <div id="result-panel" style="display:none;margin-top:14px">
+    <div class="trans-panel">
+      <div class="qa-tab-bar">
+        <button class="qa-tab on" onclick="switchResultTab('rtab-trans',this)">번역문</button>
+        <button class="qa-tab" onclick="switchResultTab('rtab-summary',this)">요약</button>
+        <button class="qa-tab" onclick="switchResultTab('rtab-keywords',this)">키워드</button>
+        <button class="qa-tab" onclick="switchResultTab('rtab-refs',this)">참고문헌</button>
+        <button class="qa-tab" onclick="switchResultTab('rtab-qa',this)">Q&A</button>
+      </div>
+
+      <!-- 번역문 -->
+      <div id="rtab-trans">
+        <h3 style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">📝 번역 결과</h3>
+        <div class="trans-result-box" id="t-result-text"></div>
+        <div class="dl-btns">
+          <button class="dl-btn txt" onclick="dlTxt()">⬇ TXT</button>
+          <button class="dl-btn txt" onclick="dlHtml()">⬇ HTML</button>
+        </div>
+      </div>
+
+      <!-- 요약 -->
+      <div id="rtab-summary" style="display:none">
+        <h3 style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">📋 논문 요약</h3>
+        <div class="trans-result-box" id="t-summary-text" style="max-height:200px"></div>
+      </div>
+
+      <!-- 키워드 -->
+      <div id="rtab-keywords" style="display:none">
+        <h3 style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">🔑 핵심 키워드</h3>
+        <div class="keyword-pills" id="t-keywords-list"></div>
+      </div>
+
+      <!-- 참고문헌 -->
+      <div id="rtab-refs" style="display:none">
+        <h3 style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">📚 참고문헌</h3>
+        <div id="t-refs-list"></div>
+      </div>
+
+      <!-- Q&A -->
+      <div id="rtab-qa" style="display:none">
+        <h3 style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px">💬 논문 Q&A</h3>
+        <div class="ai-chat" id="t-qa-chat" style="max-height:200px"></div>
+        <div class="ai-input-row" style="margin-top:8px">
+          <input class="ai-input" id="t-qa-input" placeholder="논문에 대해 질문하세요…" onkeydown="if(event.key==='Enter')sendPaperQA()">
+          <button class="ai-send" onclick="sendPaperQA()">→</button>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:6px">OpenAI 또는 Anthropic API 키 필요</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="contact-footer" style="margin-top:20px">
+    <p>개발자 문의 · <a href="mailto:nina829@naver.com">nina829@naver.com</a><br>
+    <span style="font-size:11px">전체 기능 (PDF 출력·이메일·용어집·히스토리·Scholar 검색) → <a href="https://github.com/lhwlhw0829-cmd/Paper-Translator-Version-1" target="_blank">GitHub Python 버전</a></span></p>
+  </div>
+</div>
+</div><!-- /app-trans -->
+
+<!-- ══ MODALS ══ -->
+<div class="modal-bg" id="modal-auth">
+  <div class="modal" style="max-width:340px">
+    <button class="modal-close" onclick="closeModal('modal-auth')">✕</button>
+    <div class="pw-wrap">
+      <div class="pw-title">🔐 관리자 로그인</div>
+      <div class="pw-sub">연구실 데이터를 관리하려면 비밀번호를 입력하세요</div>
+      <input class="pw-input" id="pw-input" type="password" placeholder="••••" maxlength="20" onkeydown="if(event.key==='Enter')tryLogin()">
+      <div class="pw-err" id="pw-err"></div>
+      <button class="btn" onclick="tryLogin()" style="margin-top:14px;max-width:200px;margin-left:auto;margin-right:auto">로그인</button>
+      <div style="font-size:11px;color:var(--text3);margin-top:10px">기본 비밀번호: <code>admin1234</code></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-admin">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-admin')">✕</button>
+    <div class="modal-title">⚙️ 연구실 데이터 관리</div>
+    <div class="modal-sub">추가·수정·삭제 후 즉시 반영됩니다</div>
+    <button class="btn sm" onclick="openLabForm(null)" style="width:100%;margin-bottom:14px">+ 새 연구실 추가</button>
+    <div id="admin-lab-list"></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-form">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-form')">✕</button>
+    <div class="modal-title" id="form-title">연구실 추가</div>
+    <div class="modal-sub">모든 항목 입력 (계약대학원·논문링크는 선택)</div>
+    <input type="hidden" id="form-id">
+    <div class="form-group"><label class="form-label">연구실 이름 *</label><input class="form-input" id="f-name" placeholder="비전·지능시스템 연구실 (VIS Lab)"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">교수명 *</label><input class="form-input" id="f-prof" placeholder="김민준 교수"></div>
+      <div class="form-group"><label class="form-label">소속 학과 *</label><input class="form-input" id="f-univ" placeholder="OO대 인공지능학과"></div>
+    </div>
+    <div class="form-group"><label class="form-label">관련 태그 * <span class="form-hint-text">(쉼표 구분)</span></label><input class="form-input" id="f-tags" placeholder="컴퓨터비전, 의료영상"></div>
+    <div class="form-group"><label class="form-label">연구 방향 *</label><input class="form-input" id="f-dir" placeholder="의료영상 자동 분할과 경량 모델"></div>
+    <div class="form-group"><label class="form-label">대표 논문 제목 *</label><input class="form-input" id="f-paper" placeholder="Lightweight U-Net for Real-time Medical Image Segmentation"></div>
+    <div class="form-group"><label class="form-label">논문 검색 키워드 <span class="form-hint-text">(구글 스칼라용, 선택)</span></label><input class="form-input" id="f-paperQ" placeholder="U-Net medical image segmentation 2024"></div>
+    <div class="form-group"><label class="form-label">논문 쉬운 한 줄 요약 *</label><input class="form-input" id="f-easy" placeholder="적은 연산으로 의료영상 병변을 빠르게 자동 구분"></div>
+    <div class="form-group"><label class="form-label">연결 직무 / 진로 *</label><input class="form-input" id="f-industry" placeholder="의료 AI 연구원 / 영상인식 엔지니어"></div>
+    <div class="form-group"><label class="form-label">계약대학원 / 산학 연계 <span class="form-hint-text">(없으면 공백)</span></label><input class="form-input" id="f-contract" placeholder="S사 계약대학원(등록금 지원+입사형)"></div>
+    <div class="form-group"><label class="form-label">연구실 홈페이지 URL <span class="form-hint-text">(선택)</span></label><input class="form-input" id="f-url" placeholder="https://vis-lab.oo.ac.kr"></div>
+    <hr class="divider">
+    <div style="display:flex;gap:10px"><button class="btn ghost sm" onclick="closeModal('modal-form')" style="flex:1;margin-top:0">취소</button><button class="btn sm" onclick="saveLab()" style="flex:2;margin-top:0">저장하기</button></div>
+    <div class="form-err" id="form-err"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════
+   PDF.js worker setup
+═══════════════════════════════ */
+if(typeof pdfjsLib!=='undefined'){
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
+/* ═══════════════════════════════
+   RESEARCHPATH DATA
+═══════════════════════════════ */
+const DEFAULT_LABS=[
+  {id:"cv",name:"비전·지능시스템 연구실 (VIS Lab)",prof:"김민준 교수",univ:"OO대 인공지능학과",tags:["컴퓨터비전","의료영상","딥러닝"],dir:"의료영상 자동 분할과 경량 모델 개발",paper:"Lightweight U-Net for Real-time Medical Image Segmentation",paperQ:"U-Net medical image segmentation lightweight real-time",easy:"적은 연산으로 의료영상 병변을 빠르게 자동 구분",industry:"의료 AI 연구원 / 영상인식 엔지니어",contract:"S사 계약대학원(등록금 지원+입사형)",url:""},
+  {id:"ml",name:"머신러닝 응용 연구실 (MLA Lab)",prof:"이서연 교수",univ:"OO대 컴퓨터공학과",tags:["머신러닝","추천시스템","랭킹모델"],dir:"대규모 추천·랭킹 모델의 효율적 학습",paper:"Efficient Training of Large-scale Recommender Models",paperQ:"large-scale recommender model efficient training",easy:"수억 데이터에서도 추천 모델을 싸고 빠르게 학습",industry:"추천팀 ML엔지니어 / 데이터 사이언티스트",contract:"N사 산학장학생 연 2명 선발",url:""},
+  {id:"bd",name:"빅데이터·AI 인프라 연구실 (BDI Lab)",prof:"박지훈 교수",univ:"OO대 데이터사이언스학과",tags:["빅데이터","MLOps","데이터엔지니어링"],dir:"대용량 파이프라인과 모델 서빙 자동화",paper:"Scalable Feature Store for Real-time ML Serving",paperQ:"scalable feature store real-time ML serving",easy:"실시간 AI가 데이터를 빠르게 꺼내쓰게 돕는 저장 구조",industry:"데이터 엔지니어 / MLOps 엔지니어",contract:"K사 계약학과 + 야간 대학원 연계",url:""},
+  {id:"nlp",name:"자연어처리 연구실 (NLP Lab)",prof:"최수빈 교수",univ:"OO대 인공지능학과",tags:["NLP","대형언어모델","텍스트분류"],dir:"한국어 특화 LLM 파인튜닝과 감성 분석",paper:"Korean LLM Fine-tuning with Domain Adaptation",paperQ:"Korean LLM fine-tuning domain adaptation sentiment",easy:"한국어를 더 잘 이해하는 AI 언어모델 만들기",industry:"NLP 엔지니어 / AI 리서처",contract:"카카오 산학장학생 연 3명",url:""},
+  {id:"rl",name:"강화학습·로보틱스 연구실 (RL&R Lab)",prof:"정현우 교수",univ:"OO대 기계공학과",tags:["강화학습","로보틱스","자율주행"],dir:"로봇 조작과 자율주행을 위한 심층강화학습",paper:"Deep RL for Robotic Manipulation in Unstructured Environments",paperQ:"deep reinforcement learning robotic manipulation",easy:"로봇이 복잡한 환경에서 스스로 움직이는 법 배우기",industry:"로봇 소프트웨어 엔지니어 / 자율주행 연구원",contract:"현대차 산학협력 프로그램",url:""},
+  {id:"xai",name:"설명가능 AI 연구실 (XAI Lab)",prof:"송다영 교수",univ:"OO대 소프트웨어학과",tags:["XAI","딥러닝","신뢰할수있는AI"],dir:"블랙박스 모델의 결정 과정 시각화·설명",paper:"Visual Explanation of Deep Neural Networks for Medical Decision Support",paperQ:"explainable AI deep neural network visualization",easy:"AI가 왜 그렇게 판단했는지 사람이 이해할 수 있게 보여주기",industry:"AI 안전성 연구원 / ML 엔지니어",contract:"",url:""},
+  {id:"graph",name:"그래프·지식 연구실 (GKN Lab)",prof:"임재원 교수",univ:"OO대 컴퓨터공학과",tags:["그래프신경망","지식그래프","추천시스템"],dir:"지식그래프와 GNN 기반 추천 시스템 고도화",paper:"Knowledge-enhanced GNN for Recommendation",paperQ:"knowledge graph GNN recommendation system",easy:"사람 간 관계와 지식을 그물망으로 표현해 더 정확히 추천",industry:"추천 알고리즘 엔지니어 / 리서치 사이언티스트",contract:"라인 산학 연 1명",url:""},
+  {id:"gen",name:"생성 AI·멀티모달 연구실 (GAM Lab)",prof:"한소희 교수",univ:"OO대 융합기술학과",tags:["생성AI","멀티모달","이미지생성"],dir:"텍스트-이미지 생성 모델 제어와 품질 향상",paper:"Controllable Text-to-Image Generation with Semantic Guidance",paperQ:"text to image generation semantic guidance diffusion",easy:"글로 설명하면 원하는 이미지를 만드는 AI 개발",industry:"생성 AI 엔지니어 / 콘텐츠 AI 연구원",contract:"네이버 웹툰 산학 협력",url:""},
+  {id:"bio",name:"바이오인포매틱스 연구실 (BIO Lab)",prof:"윤태준 교수",univ:"OO대 생명공학과",tags:["바이오인포매틱스","단백질구조","신약개발"],dir:"딥러닝 기반 단백질 구조 예측과 신약 후보 발굴",paper:"Protein Structure Prediction using Transformer Deep Learning",paperQ:"protein structure prediction transformer drug discovery",easy:"AI로 단백질 3D 구조를 예측해 신약 개발 속도 높이기",industry:"바이오 AI 연구원 / 제약 데이터 사이언티스트",contract:"셀트리온 인턴십 연계",url:""},
+  {id:"sec",name:"AI 보안·프라이버시 연구실 (AISP Lab)",prof:"강민지 교수",univ:"OO대 정보보안학과",tags:["AI보안","연합학습","프라이버시"],dir:"데이터 노출 없이 학습하는 연합학습과 차분 프라이버시",paper:"Privacy-Preserving Federated Learning with Differential Privacy",paperQ:"federated learning differential privacy preserving",easy:"내 데이터를 공유하지 않아도 AI를 함께 학습하는 기술",industry:"AI 보안 엔지니어 / 프라이버시 연구원",contract:"",url:""}
+];
+const ADMIN_PW="admin1234";
+
+function getLabs(){try{const s=localStorage.getItem("rp_labs");return s?JSON.parse(s):DEFAULT_LABS;}catch(e){return DEFAULT_LABS;}}
+function saveLabs(labs){try{localStorage.setItem("rp_labs",JSON.stringify(labs));}catch(e){}}
+
+/* STATE */
+const sel=new Set(); let customTags=[]; let currentLab=null; let currentMailText="";
+let editingId=null; let apiKey=""; let aiHistory=[]; let paperQAHistory=[];
+let pdfFiles=[]; let extractedText=""; let translatedText=""; let translSummary="";
+
+/* ═══ APP TAB SWITCH ═══ */
+function switchApp(id){
+  document.querySelectorAll('.app-page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.app-tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  const idx=id==='app-rp'?0:1;
+  document.querySelectorAll('.app-tab')[idx].classList.add('on');
+  window.scrollTo(0,0);
+}
+
+/* ═══ CHIPS ═══ */
+function buildChips(){
+  const labs=getLabs(); const allTags=new Set();
+  labs.forEach(l=>l.tags.forEach(t=>allTags.add(t)));
+  customTags.forEach(t=>allTags.add(t));
+  const c=document.getElementById("chip-container"); c.innerHTML="";
+  allTags.forEach(tag=>{
+    const el=document.createElement("span");
+    el.className="chip"+(sel.has(tag)?" on":""); el.textContent=tag; el.dataset.k=tag;
+    el.onclick=()=>{el.classList.toggle("on"); sel.has(tag)?sel.delete(tag):sel.add(tag);};
+    c.appendChild(el);
+  });
+}
+function addCustomTag(){
+  const inp=document.getElementById("custom-tag"); const v=inp.value.trim();
+  if(!v)return; if(!customTags.includes(v)){customTags.push(v);sel.add(v);}
+  inp.value=""; buildChips(); showToast("키워드 추가: "+v);
+}
+function toggleCareerCustom(){
+  const v=document.getElementById("career").value;
+  document.getElementById("career-custom-input").classList.toggle("show",v==="custom");
+}
+
+/* ═══ SCREEN NAV ═══ */
+function show(id){
+  document.querySelectorAll("#app-rp .screen").forEach(s=>s.classList.remove("on"));
+  document.getElementById(id).classList.add("on"); window.scrollTo(0,0);
+}
+
+/* ═══ SCORING ═══ */
+function score(lab,career){
+  let s=0; lab.tags.forEach(t=>{if(sel.has(t))s+=3;});
+  if(career==="contract"&&lab.contract)s+=2;
+  if(career==="academic")s+=1;
+  return s;
+}
+
+/* ═══ SCREEN 2 ═══ */
+function go2(){
+  const career=document.getElementById("career").value;
+  const labs=getLabs();
+  let ranked=labs.map(l=>({l,s:score(l,career)}));
+  if(sel.size)ranked.sort((a,b)=>b.s-a.s);
+  const maxS=Math.max(...ranked.map(r=>r.s),1);
+  const isContract=career==="contract";
+
+  const allTags=new Set(); labs.forEach(l=>l.tags.forEach(t=>allTags.add(t)));
+  let fb='<button class="filter-chip on" onclick="filterResults(\'all\',this)">전체</button>';
+  allTags.forEach(t=>{fb+=`<button class="filter-chip" onclick="filterResults('${t}',this)">${t}</button>`;});
+  document.getElementById("filter-bar").innerHTML=fb+`<span class="result-count" id="result-count">${ranked.length}개</span>`;
+
+  let h="";
+  ranked.forEach(({l,s},i)=>{
+    const pct=Math.round((s/maxS)*100);
+    const rank=i===0&&s>0?"top":""; const rankLabel=i===0&&s>0?"✨ 최고 매칭":s>0?`매칭 ${s}점`:"조건 미해당";
+    const tagsHtml=l.tags.map(t=>`<span class="tag">${t}</span>`).join("");
+    const scholarsUrl="https://scholar.google.com/scholar?q="+encodeURIComponent(l.paperQ||l.paper);
+    const contractHtml=l.contract?`<div class="contract-badge">🏢 ${l.contract}</div>`:`<span style="font-size:12px;color:var(--text3)">계약대학원 정보 없음</span>`;
+    const labUrlHtml=l.url?`<a class="paper-link" href="${l.url}" target="_blank">🏠 연구실 홈페이지</a>`:"";
+    h+=`<div class="lab-card" data-tags="${l.tags.join(",")}">
+      <div class="lab-header"><div class="lab-name">${l.name}</div><span class="lab-rank ${rank}">${rankLabel}</span></div>
+      <div class="lab-meta">${l.prof} · ${l.univ}</div>
+      <div class="tags">${tagsHtml}</div>
+      <div class="match-row"><div class="match-score">▶ 매칭</div><div class="match-bar-bg"><div class="match-bar" style="width:${pct}%"></div></div></div>
+      <div class="axis key"><div class="axis-label">⭐ 연구 분야 (관심 매칭)</div><p>${l.dir}</p></div>
+      <div class="axis"><div class="axis-label">📄 대표 논문</div><div class="paper-title">${l.paper}</div>
+        <a class="paper-link" href="${scholarsUrl}" target="_blank">🔍 구글 스칼라에서 보기</a>
+        ${labUrlHtml}<div class="easy-pill">💡 ${l.easy}</div></div>
+      <div class="axis ${isContract?"key":"peach"}"><div class="axis-label">⭐ 취업 / 계약대학원 연결</div><p>${l.industry}</p>${contractHtml}</div>
+      <div class="card-btns">
+        <button class="card-btn mail-btn" data-action="mail" data-id="${l.id}">✉️ 컨택 메일</button>
+        <button class="card-btn ai-btn" data-action="ai" data-id="${l.id}">🤖 AI 질문</button>
+        <button class="card-btn trans-btn" data-action="trans" data-id="${l.id}">📄 논문 번역</button>
+      </div></div>`;
+  });
+  document.getElementById("list").innerHTML=h;
+  document.getElementById("result-badge").textContent="— "+ranked.length+"개";
+  document.getElementById("no-result").style.display=ranked.length?"none":"";
+  show("s2");
+}
+
+function filterResults(tag,btn){
+  document.querySelectorAll(".filter-chip").forEach(c=>c.classList.remove("on")); btn.classList.add("on");
+  const cards=document.querySelectorAll(".lab-card"); let cnt=0;
+  cards.forEach(card=>{const tags=card.dataset.tags.split(",");const show=(tag==="all"||tags.includes(tag));card.style.display=show?"":"none";if(show)cnt++;});
+  document.getElementById("result-count").textContent=cnt+"개";
+}
+
+/* ═══ EVENT DELEGATION ═══ */
+document.addEventListener("click",e=>{
+  const el=e.target.closest("[data-action]"); if(!el)return;
+  const act=el.dataset.action;
+  if(act==="mail")go3(el.dataset.id);
+  if(act==="ai")goAi(el.dataset.id);
+  if(act==="trans"){switchApp("app-trans");showToast("번역기 탭에서 PDF를 업로드하세요");}
+  if(act==="edit-lab")openLabForm(el.dataset.id);
+  if(act==="del-lab")deleteLab(el.dataset.id);
+});
+
+/* ═══ SCREEN 3: MAIL ═══ */
+function go3(id){
+  const labs=getLabs(); const l=labs.find(x=>x.id===id); if(!l)return;
+  currentLab=l; const tagsStr=l.tags.join("과 "); const job=l.industry.split("/")[0].trim();
+  currentMailText=
+    `제목: [${l.univ}] ${l.prof}님 연구 관심 학부생입니다\n\n${l.prof}님께,\n\n안녕하세요. ${tagsStr}에 관심을 갖고 대학원 진학을 준비 중인 학부생 [이름]입니다.\n교수님의 "${l.paper}" 논문을 읽고 ${l.dir} 방향에 깊은 관심을 갖게 되어 메일 드립니다.\n\n저는 ${job} 또는 연구자 진로를 고민하고 있어, 학부연구생 참여나 연구실에 대해 짧게 여쭐 기회를 얻고 싶습니다.\n\n편하신 시간에 답장 주시면 이력서와 성적증명서를 보내드리겠습니다.\n감사합니다.\n\n[이름] 드림\n[학교 / 학과 / 학번]`;
+  document.getElementById("mail").textContent=currentMailText;
+  document.getElementById("mail-lab-badge").innerHTML=`<div class="dot"></div><span><strong>${l.name}</strong> · ${l.prof}</span>`;
+  show("s3");
+}
+
+function openNaver(){const sub=encodeURIComponent(currentMailText.split("\n")[0].replace("제목: ","")),body=encodeURIComponent(currentMailText.split("\n").slice(2).join("\n"));window.open(`https://mail.naver.com/compose?subject=${sub}&body=${body}`,"_blank");}
+function openGmail(){const sub=encodeURIComponent(currentMailText.split("\n")[0].replace("제목: ","")),body=encodeURIComponent(currentMailText.split("\n").slice(2).join("\n"));window.open(`https://mail.google.com/mail/?view=cm&su=${sub}&body=${body}`,"_blank");}
+function copyMail(){
+  const fallback=t=>{const ta=document.createElement("textarea");ta.value=t;ta.style.cssText="position:fixed;opacity:0;";document.body.appendChild(ta);ta.select();document.execCommand("copy");document.body.removeChild(ta);};
+  try{navigator.clipboard.writeText(currentMailText).then(()=>showToast("메일이 복사되었습니다!")).catch(()=>{fallback(currentMailText);showToast("메일이 복사되었습니다!");});}
+  catch{fallback(currentMailText);showToast("메일이 복사되었습니다!");}
+}
+
+/* ═══ AI Q&A ═══ */
+const AI_DEMO={"연구":"{dir} 방향으로 연구합니다. 최신 딥러닝 기법과 실용적 응용을 결합하는 것이 특징이에요.","진로":"{industry} 직무 또는 박사 과정을 통한 독립 연구자로 성장하는 경로가 주로 열려 있어요.","컨택":"관심 논문을 읽었다는 구체적인 언급과 함께 짧고 명확한 메일을 보내는 것이 효과적입니다.","논문":"현재 대표 논문인 '{paper}'부터 읽어보세요. 관련 키워드로 Scholar에서 인용 논문을 따라가면 도움이 됩니다.","준비":"Python과 기초 ML 개념(선형대수, 확률통계)은 필수입니다. 관련 논문 2-3편을 읽어두면 면담에서 큰 도움이 됩니다."};
+
+function goAi(id){
+  const labs=getLabs(); const l=labs.find(x=>x.id===id); if(!l)return;
+  currentLab=l; aiHistory=[];
+  document.getElementById("ai-chat").innerHTML=`<div class="ai-msg bot"><div class="ai-bubble">안녕하세요! <strong>${l.name}</strong>에 대해 궁금한 것을 물어보세요 😊</div></div>`;
+  document.getElementById("ai-lab-badge").innerHTML=`<div class="dot"></div><span><strong>${l.name}</strong> · ${l.prof}</span>`;
+  const qs=["연구 방향이 뭔가요?","어떤 진로로 연결되나요?","컨택 메일 팁 알려줘","준비해야 할 것은?","대표 논문 설명해줘"];
+  document.getElementById("ai-suggestions").innerHTML=qs.map(q=>`<button class="ai-suggestion" onclick="setQ('${q}')">${q}</button>`).join("");
+  tryLoadApiKey(); show("s4");
+}
+function setQ(q){document.getElementById("ai-input").value=q;document.getElementById("ai-input").focus();}
+
+function saveApiKey(){
+  const k=document.getElementById("api-key-input").value.trim();
+  if(!k){showToast("API 키를 입력하세요");return;} apiKey=k;
+  try{localStorage.setItem("rp_apikey",k);}catch(e){}
+  document.getElementById("api-setup-box").style.display="none";
+  const b=document.getElementById("ai-status-badge"); b.textContent="API 연결됨 ✓"; b.className="ai-badge connected";
+  showToast("API 키 저장 완료!");
+}
+function tryLoadApiKey(){
+  try{const k=localStorage.getItem("rp_apikey");if(k){apiKey=k;document.getElementById("api-setup-box").style.display="none";const b=document.getElementById("ai-status-badge");b.textContent="API 연결됨 ✓";b.className="ai-badge connected";}}catch(e){}
+}
+
+async function sendAi(){
+  const inp=document.getElementById("ai-input"); const q=inp.value.trim(); if(!q)return; inp.value="";
+  const chat=document.getElementById("ai-chat");
+  chat.innerHTML+=`<div class="ai-msg user"><div class="ai-bubble">${q}</div></div>`;
+  const lid="l"+Date.now(); chat.innerHTML+=`<div class="ai-msg bot" id="${lid}"><div class="ai-bubble loading">답변 생성 중…</div></div>`;
+  chat.scrollTop=chat.scrollHeight;
+  if(apiKey){
+    try{
+      aiHistory.push({role:"user",content:q});
+      const sys=`당신은 ResearchPath AI 도우미입니다. 현재 연구실:\n이름:${currentLab.name}\n교수:${currentLab.prof},소속:${currentLab.univ}\n연구:${currentLab.dir}\n논문:${currentLab.paper}\n요약:${currentLab.easy}\n직무:${currentLab.industry}\n계약대학원:${currentLab.contract||"없음"}\n200자 이내로 친절하게 한국어로.`;
+      const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01"},body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:400,system:sys,messages:aiHistory})});
+      const data=await res.json(); const ans=data.content?.[0]?.text||"응답을 받지 못했어요.";
+      aiHistory.push({role:"assistant",content:ans});
+      document.getElementById(lid).innerHTML=`<div class="ai-bubble">${ans}</div>`;
+    }catch(err){document.getElementById(lid).innerHTML=`<div class="ai-bubble loading">오류: ${err.message}</div>`;}
+  }else{
+    await new Promise(r=>setTimeout(r,800));
+    const qL=q.toLowerCase(); let ans="";
+    if(qL.includes("방향")||qL.includes("연구")||qL.includes("뭐하"))ans=AI_DEMO["연구"].replace("{dir}",currentLab.dir);
+    else if(qL.includes("진로")||qL.includes("취업")||qL.includes("직무"))ans=AI_DEMO["진로"].replace("{industry}",currentLab.industry);
+    else if(qL.includes("컨택")||qL.includes("메일"))ans=AI_DEMO["컨택"];
+    else if(qL.includes("논문")||qL.includes("읽"))ans=AI_DEMO["논문"].replace("{paper}",currentLab.paper);
+    else if(qL.includes("준비")||qL.includes("역량"))ans=AI_DEMO["준비"];
+    else ans=`"${currentLab.name}"에 관한 질문이군요! API 키를 설정하면 더 정확한 답변을 받을 수 있어요.`;
+    document.getElementById(lid).innerHTML=`<div class="ai-bubble">${ans}</div>`;
+  }
+  chat.scrollTop=chat.scrollHeight;
+}
+
+/* ═══════════════════════════════
+   TRANSLATOR
+═══════════════════════════════ */
+let translApiKey=""; let translClaudeKey="";
+
+function updateTransApiStatus(){
+  const k=document.getElementById("t-openai-key").value.trim();
+  document.getElementById("t-api-status").textContent=k?"✓ API 키 입력됨 (저장은 로컬에만)":"";
+}
+
+/* PDF UPLOAD */
+function onDragOver(e){e.preventDefault();document.getElementById("upload-area").classList.add("dragover");}
+function onDragLeave(e){document.getElementById("upload-area").classList.remove("dragover");}
+function onDrop(e){e.preventDefault();document.getElementById("upload-area").classList.remove("dragover");addFiles([...e.dataTransfer.files].filter(f=>f.type==="application/pdf"));}
+function onFileSelect(e){addFiles([...e.target.files]);e.target.value="";}
+
+function addFiles(files){
+  files.forEach(f=>{if(!pdfFiles.find(x=>x.name===f.name&&x.size===f.size))pdfFiles.push(f);});
+  renderFileList();
+}
+function removeFile(idx){pdfFiles.splice(idx,1);renderFileList();}
+function renderFileList(){
+  const c=document.getElementById("file-list");
+  c.innerHTML=pdfFiles.map((f,i)=>`<div class="file-item"><span class="fname">📄 ${f.name}</span><span class="fsize">${(f.size/1024).toFixed(0)}KB</span><button class="file-remove" onclick="removeFile(${i})">✕</button></div>`).join("");
+}
+
+/* FORMULA PROTECTION */
+function protectFormulas(text){
+  const fm={}; let c=0;
+  const rep=m=>{const k=`__F${String(c++).padStart(4,'0')}__`;fm[k]=m;return k;};
+  text=text.replace(/\$\$[\s\S]+?\$\$/g,rep);
+  text=text.replace(/\$[^\$\n]+?\$/g,rep);
+  text=text.replace(/\\begin\{[a-z*]+\}[\s\S]+?\\end\{[a-z*]+\}/g,rep);
+  return{text,fm};
+}
+function restoreFormulas(text,fm){Object.entries(fm).forEach(([k,v])=>{text=text.replaceAll(k,v);});return text;}
+
+/* PDF TEXT EXTRACTION */
+async function extractPdfText(file){
+  const ab=await file.arrayBuffer();
+  const pdf=await pdfjsLib.getDocument({data:ab}).promise;
+  let pages=[];
+  for(let i=1;i<=pdf.numPages;i++){
+    const page=await pdf.getPage(i);
+    const tc=await page.getTextContent();
+    pages.push(tc.items.map(it=>it.str).join(" "));
+  }
+  return pages;
+}
+
+/* SPLIT INTO CHUNKS */
+function splitChunks(text,size=1500){
+  const paras=text.split(/\n{2,}/); let chunks=[],cur=[],cl=0;
+  paras.forEach(p=>{if(cl+p.length>size&&cur.length){chunks.push(cur.join("\n\n"));cur=[p];cl=p.length;}else{cur.push(p);cl+=p.length;}});
+  if(cur.length)chunks.push(cur.join("\n\n"));
+  return chunks.filter(c=>c.trim());
+}
+
+/* TRANSLATE VIA OPENAI */
+async function translateChunk(oaiKey,chunk,prev,model,target,terms,style,before){
+  const styleMap={"학술 격식체 (~이다/~하였다)":"학술 격식체, 종결: ~이다,~하였다","구어체 (~해요/~거든요)":"구어체, 종결: ~해요,~거든요","신문 기사체 (~했다/~이다)":"기사체, 종결: ~했다,~이다","교과서체 (~합니다/~입니다)":"교과서체, 종결: ~합니다,~입니다"};
+  const sn=styleMap[style]||"학술 격식체";
+  const termNote=terms?"전문용어 첫 등장 시 '번역어(원문)' 형태로 병기.":"";
+  const sys=`학술 논문 전문 번역가. 번역 목표: ${target}. [규칙] 1.전체 번역, 생략금지 2.__FXXXX__ 수정금지 3.수치/단위/저자명 번역금지 4.${sn} 5.${termNote} [추가지시] ${before||"없음"} [출력] 번역문만. 단락구조 유지.`;
+  const ctx=prev?`[이전 문맥]\n${prev}\n[번역시작]\n`:"";
+  const res=await fetch("https://api.openai.com/v1/chat/completions",{
+    method:"POST",
+    headers:{"Content-Type":"application/json","Authorization":"Bearer "+oaiKey},
+    body:JSON.stringify({model,messages:[{role:"system",content:sys},{role:"user",content:ctx+chunk}],temperature:0.2,max_tokens:4096})
+  });
+  if(!res.ok){const err=await res.json();throw new Error(err.error?.message||"API 오류");}
+  const data=await res.json();
+  return data.choices[0].message.content.trim();
+}
+
+async function doSummary(oaiKey,text,model,target){
+  const res=await fetch("https://api.openai.com/v1/chat/completions",{
+    method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+oaiKey},
+    body:JSON.stringify({model,messages:[{role:"user",content:`다음 논문을 ${target}로 구조화 요약하라.\n형식:\n**연구 목적:**\n**방법론:**\n**주요 결과:**\n**결론:**\n**한계점:**\n\n논문:\n${text.slice(0,8000)}`}],temperature:0.3,max_tokens:1000})
+  });
+  const data=await res.json(); return data.choices[0].message.content.trim();
+}
+
+async function doKeywords(oaiKey,text,model){
+  const res=await fetch("https://api.openai.com/v1/chat/completions",{
+    method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+oaiKey},
+    body:JSON.stringify({model,messages:[{role:"user",content:`다음 논문에서 핵심 키워드를 10~15개 추출하라.\nJSON 배열로만 출력. 예: ["딥러닝","트랜스포머"]\n\n논문:\n${text.slice(0,6000)}`}],temperature:0.1,max_tokens:300})
+  });
+  const data=await res.json();
+  try{return JSON.parse(data.choices[0].message.content.replace(/```json|```/g,'').trim());}
+  catch{return data.choices[0].message.content.match(/"([^"]+)"/g)?.map(s=>s.replace(/"/g,''))||[];}
+}
+
+async function doRefs(oaiKey,text,model){
+  const res=await fetch("https://api.openai.com/v1/chat/completions",{
+    method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+oaiKey},
+    body:JSON.stringify({model,messages:[{role:"user",content:`논문의 참고문헌을 JSON 배열로 정리하라. 형식: [{"no":1,"ref":"전체"}]\n없으면 []\n\n논문끝:\n${text.slice(-4000)}`}],temperature:0.1,max_tokens:2000})
+  });
+  const data=await res.json();
+  try{return JSON.parse(data.choices[0].message.content.replace(/```json|```/g,'').trim());}
+  catch{return[];}
+}
+
+/* MAIN TRANSLATE FUNCTION */
+async function startTranslation(){
+  const oaiKey=document.getElementById("t-openai-key").value.trim();
+  if(!oaiKey){showToast("OpenAI API 키를 입력하세요");return;}
+  if(!pdfFiles.length){showToast("PDF 파일을 업로드하세요");return;}
+
+  const model=document.getElementById("t-model").value;
+  const target=document.getElementById("t-target").value;
+  const style=document.getElementById("t-style").value;
+  const doFormula=document.getElementById("t-formula").checked;
+  const doTerms=document.getElementById("t-terms").checked;
+  const doSummaryFlag=document.getElementById("t-summary").checked;
+  const doKwFlag=document.getElementById("t-keywords").checked;
+  const doRefsFlag=document.getElementById("t-refs").checked;
+  const before=document.getElementById("t-before").value;
+  const after=document.getElementById("t-after").value;
+
+  const prog=document.getElementById("trans-progress"); prog.style.display="block";
+  const bar=document.getElementById("t-progress-bar");
+  const label=document.getElementById("t-progress-label");
+  const statusBox=document.getElementById("t-status-box");
+  document.getElementById("result-panel").style.display="none";
+  document.getElementById("trans-start-btn").disabled=true;
+
+  function setStatus(msg,type="info"){statusBox.textContent=msg;statusBox.className="status-box "+type;}
+  function setProgress(pct,msg){bar.style.width=pct+"%";label.textContent=msg;}
+
+  try{
+    let allPages=[]; let allText="";
+    for(let fi=0;fi<pdfFiles.length;fi++){
+      setStatus(`📖 ${pdfFiles[fi].name} 파싱 중… (${fi+1}/${pdfFiles.length})`,"info");
+      setProgress(5,"PDF 텍스트 추출 중…");
+      const pages=await extractPdfText(pdfFiles[fi]);
+      allPages=allPages.concat(pages);
+    }
+    allText=allPages.join("\n\n");
+    extractedText=allText;
+
+    /* 키워드 */
+    let keywords=[];
+    if(doKwFlag){setStatus("🔑 키워드 추출 중…","info");setProgress(10,"키워드 추출…");
+      try{keywords=await doKeywords(oaiKey,allText,model);}catch(e){}}
+
+    /* 참고문헌 */
+    let refs=[];
+    if(doRefsFlag){setStatus("📚 참고문헌 추출 중…","info");setProgress(15,"참고문헌…");
+      try{refs=await doRefs(oaiKey,allText,model);}catch(e){}}
+
+    /* 수식 보호 */
+    let{text:protected_,fm}=doFormula?protectFormulas(allText):{text:allText,fm:{}};
+    const chunks=splitChunks(protected_,1500);
+    const nc=chunks.length;
+
+    /* 번역 */
+    let translated=[]; let prev="";
+    for(let i=0;i<nc;i++){
+      setStatus(`🔄 번역 중… ${i+1}/${nc} 청크 (${model})`,"info");
+      setProgress(Math.round(15+(i/nc)*70),`청크 ${i+1}/${nc} 번역 중…`);
+      for(let attempt=0;attempt<3;attempt++){
+        try{
+          const t=await translateChunk(oaiKey,chunks[i],prev,model,target,doTerms,style,before);
+          translated.push(t); prev=t.slice(-300); break;
+        }catch(e){
+          if(attempt===2)translated.push(`[청크 ${i+1} 번역 실패: ${e.message}]`);
+          else await new Promise(r=>setTimeout(r,5000*(attempt+1)));
+        }
+      }
+    }
+
+    let fullText=translated.join("\n\n");
+    if(Object.keys(fm).length)fullText=restoreFormulas(fullText,fm);
+
+    /* 번역 후 수정 */
+    if(after&&after.trim()){
+      setStatus("✏️ 번역 후 수정 중…","info");setProgress(88,"후처리…");
+      try{
+        const res=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+oaiKey},body:JSON.stringify({model,messages:[{role:"user",content:`다음 번역문을 요청사항대로 수정하라.\n요청:${after}\n번역문:${fullText}`}],temperature:0.3,max_tokens:4096})});
+        const d=await res.json(); fullText=d.choices[0].message.content.trim();
+      }catch(e){}
+    }
+    translatedText=fullText;
+
+    /* 요약 */
+    let summary="";
+    if(doSummaryFlag){setStatus("📋 요약 생성 중…","info");setProgress(92,"요약…");
+      try{summary=await doSummary(oaiKey,allText,model,target);translSummary=summary;}catch(e){}}
+
+    setStatus("✅ 번역 완료!","ok"); setProgress(100,"완료");
+
+    /* 결과 표시 */
+    document.getElementById("t-result-text").textContent=fullText;
+    document.getElementById("t-summary-text").textContent=summary||"(요약 옵션을 켜고 다시 번역하세요)";
+    document.getElementById("t-keywords-list").innerHTML=keywords.map(k=>`<span class="keyword-pill">${k}</span>`).join("") || "<span style='color:var(--text3);font-size:13px'>키워드 옵션을 켜고 다시 번역하세요</span>";
+    document.getElementById("t-refs-list").innerHTML=refs.map(r=>`<div class="ref-item">[${r.no}] ${r.ref}</div>`).join("")||"<div style='color:var(--text3);font-size:13px;padding:8px'>참고문헌 옵션을 켜고 다시 번역하세요</div>";
+    document.getElementById("result-panel").style.display="block";
+    paperQAHistory=[]; document.getElementById("t-qa-chat").innerHTML="";
+
+  }catch(err){setStatus("❌ 오류: "+err.message,"err");}
+  finally{document.getElementById("trans-start-btn").disabled=false;}
+}
+
+/* RESULT TAB SWITCH */
+function switchResultTab(id,btn){
+  ["rtab-trans","rtab-summary","rtab-keywords","rtab-refs","rtab-qa"].forEach(t=>{document.getElementById(t).style.display=t===id?"":"none";});
+  document.querySelectorAll(".qa-tab").forEach(t=>t.classList.remove("on")); btn.classList.add("on");
+}
+
+/* DOWNLOAD */
+function dlTxt(){const blob=new Blob([translatedText],{type:"text/plain;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="translated.txt";a.click();}
+function dlHtml(){
+  const html=`<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>번역 결과</title><style>body{font-family:'Malgun Gothic',sans-serif;max-width:800px;margin:40px auto;padding:20px;line-height:1.8;color:#333;}</style></head><body><h1>번역 결과</h1><div>${translatedText.replace(/\n/g,"<br>")}</div></body></html>`;
+  const blob=new Blob([html],{type:"text/html;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="translated.html";a.click();
+}
+
+/* PAPER Q&A */
+async function sendPaperQA(){
+  const inp=document.getElementById("t-qa-input"); const q=inp.value.trim(); if(!q)return; inp.value="";
+  const chat=document.getElementById("t-qa-chat");
+  chat.innerHTML+=`<div class="ai-msg user"><div class="ai-bubble">${q}</div></div>`;
+  const lid="pq"+Date.now(); chat.innerHTML+=`<div class="ai-msg bot" id="${lid}"><div class="ai-bubble loading">답변 생성 중…</div></div>`;
+  chat.scrollTop=chat.scrollHeight;
+  const ctx=(translatedText||extractedText).slice(0,10000);
+  const oaiKey=document.getElementById("t-openai-key").value.trim();
+  const claudeKey=document.getElementById("t-claude-key").value.trim();
+  const apiKey_=localStorage.getItem("rp_apikey")||"";
+  try{
+    if(claudeKey||apiKey_){
+      const k=claudeKey||apiKey_;
+      paperQAHistory.push({role:"user",content:q});
+      const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":k,"anthropic-version":"2023-06-01"},body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:600,system:`학술 논문 전문가로서 논문 기반으로 한국어로 답하라.\n\n논문:\n${ctx}`,messages:paperQAHistory})});
+      const data=await res.json(); const ans=data.content?.[0]?.text||"응답 실패";
+      paperQAHistory.push({role:"assistant",content:ans});
+      document.getElementById(lid).innerHTML=`<div class="ai-bubble">${ans}</div>`;
+    }else if(oaiKey){
+      paperQAHistory.push({role:"user",content:q});
+      const msgs=[{role:"system",content:`학술 논문 전문가. 논문 기반으로 한국어로 답하라.\n\n논문:\n${ctx}`},...paperQAHistory];
+      const res=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+oaiKey},body:JSON.stringify({model:"gpt-4o-mini",messages:msgs,temperature:0.3,max_tokens:600})});
+      const data=await res.json(); const ans=data.choices[0].message.content.trim();
+      paperQAHistory.push({role:"assistant",content:ans});
+      document.getElementById(lid).innerHTML=`<div class="ai-bubble">${ans}</div>`;
+    }else{document.getElementById(lid).innerHTML=`<div class="ai-bubble loading">API 키(OpenAI 또는 Claude)를 입력해야 Q&A를 사용할 수 있어요.</div>`;}
+  }catch(err){document.getElementById(lid).innerHTML=`<div class="ai-bubble loading">오류: ${err.message}</div>`;}
+  chat.scrollTop=chat.scrollHeight;
+}
+
+/* ═══════════════════════════════
+   ADMIN / MODALS
+═══════════════════════════════ */
+function openAdminAuth(){document.getElementById("pw-input").value="";document.getElementById("pw-err").textContent="";openModal("modal-auth");setTimeout(()=>document.getElementById("pw-input").focus(),100);}
+function tryLogin(){if(document.getElementById("pw-input").value===ADMIN_PW){closeModal("modal-auth");renderAdminList();openModal("modal-admin");}else{document.getElementById("pw-err").textContent="비밀번호가 틀렸습니다.";document.getElementById("pw-input").value="";}}
+function renderAdminList(){
+  const labs=getLabs(); const c=document.getElementById("admin-lab-list");
+  if(!labs.length){c.innerHTML=`<div class="empty"><div class="empty-icon">🏫</div><p>등록된 연구실이 없어요.</p></div>`;return;}
+  c.innerHTML=labs.map(l=>`<div class="admin-lab-item"><div class="admin-lab-info"><div class="admin-lab-name">${l.name}</div><div class="admin-lab-meta">${l.prof} · ${l.univ} · [${l.tags.join(", ")}]</div></div><div class="admin-btns"><button class="btn sm ghost" data-action="edit-lab" data-id="${l.id}">수정</button><button class="btn sm danger" data-action="del-lab" data-id="${l.id}">삭제</button></div></div>`).join("");
+}
+function openLabForm(id){
+  editingId=id; const l=id?getLabs().find(x=>x.id===id):null;
+  document.getElementById("form-title").textContent=l?"연구실 수정":"연구실 추가";
+  document.getElementById("form-id").value=id||"";
+  ["name","prof","univ","tags","dir","paper","paperQ","easy","industry","contract","url"].forEach(k=>{const el=document.getElementById("f-"+k);if(el)el.value=l?(l[k]||""):"";});
+  document.getElementById("form-err").textContent=""; closeModal("modal-admin"); openModal("modal-form");
+}
+function saveLab(){
+  const g=id=>document.getElementById(id).value.trim();
+  const req=["f-name","f-prof","f-univ","f-tags","f-dir","f-paper","f-easy","f-industry"];
+  for(const id of req){if(!g(id)){document.getElementById("form-err").textContent="필수 항목을 모두 입력해 주세요.";return;}}
+  const labs=getLabs(); const id=editingId;
+  const newLab={id:id||"lab_"+Date.now(),name:g("f-name"),prof:g("f-prof"),univ:g("f-univ"),tags:g("f-tags").split(",").map(t=>t.trim()).filter(Boolean),dir:g("f-dir"),paper:g("f-paper"),paperQ:g("f-paperQ"),easy:g("f-easy"),industry:g("f-industry"),contract:g("f-contract"),url:g("f-url")};
+  if(id){const i=labs.findIndex(l=>l.id===id);if(i!==-1)labs[i]=newLab;}else labs.push(newLab);
+  saveLabs(labs); buildChips(); closeModal("modal-form"); openModal("modal-admin"); renderAdminList();
+  showToast(id?"수정 완료!":"연구실이 추가되었습니다!");
+}
+function deleteLab(id){if(!confirm("이 연구실을 삭제할까요?"))return;saveLabs(getLabs().filter(l=>l.id!==id));buildChips();renderAdminList();showToast("삭제되었습니다.");}
+function openModal(id){document.getElementById(id).classList.add("on");}
+function closeModal(id){document.getElementById(id).classList.remove("on");}
+document.querySelectorAll(".modal-bg").forEach(bg=>bg.addEventListener("click",e=>{if(e.target===bg)bg.classList.remove("on");}));
+
+/* ═══ TOAST ═══ */
+function showToast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2400);}
+
+/* ═══ INIT ═══ */
+buildChips();
+</script>
+</body>
+</html>
