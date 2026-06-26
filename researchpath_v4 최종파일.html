@@ -1,0 +1,2294 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>ResearchPath v2 — 내 연구실을 찾는 가장 스마트한 방법</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════════ */
+:root {
+  --mint:   #c8f5ec;
+  --mint2:  #5ecfb8;
+  --mint3:  #2ba896;
+  --sky:    #c2e4f7;
+  --sky2:   #5ab4e8;
+  --sky3:   #2889c5;
+  --pink:   #ffd6e7;
+  --pink2:  #f794c0;
+  --pink3:  #d44f8f;
+  --yellow: #fff4c2;
+  --yellow2:#ffd94d;
+  --yellow3:#e8b800;
+  --lav:    #e8dcfa;
+  --lav2:   #b89aee;
+  --lav3:   #7c55cc;
+  --peach:  #fde5d4;
+  --peach2: #f9a87a;
+
+  --bg:     #f0f7ff;
+  --surface:#ffffffcc;
+  --surface2:rgba(255,255,255,0.55);
+  --text:   #1a2340;
+  --text2:  #4a5578;
+  --text3:  #8a9abf;
+  --border: rgba(140,190,240,0.28);
+  --shadow: 0 8px 36px rgba(80,140,220,0.10);
+  --shadow2:0 20px 60px rgba(80,140,220,0.18);
+  --r:      20px;
+  --r-sm:   12px;
+}
+
+/* ═══════════════════════════════════════════
+   RESET + BASE
+═══════════════════════════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:'Pretendard',-apple-system,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-thumb{background:rgba(90,180,230,0.3);border-radius:99px;}
+
+/* ═══════════════════════════════════════════
+   ANIMATED BACKGROUND
+═══════════════════════════════════════════ */
+#canvas-bg{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+}
+
+/* ═══════════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════════ */
+#app{position:relative;z-index:1;min-height:100vh;}
+
+/* ═══════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════ */
+header{
+  position:sticky;top:0;z-index:200;height:58px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;
+  background:rgba(240,247,255,0.80);
+  backdrop-filter:blur(20px) saturate(1.6);
+  border-bottom:1px solid var(--border);
+}
+.logo{
+  font-size:1.15rem;font-weight:900;letter-spacing:-0.5px;
+  background:linear-gradient(130deg,var(--mint3) 0%,var(--sky3) 40%,var(--lav3) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  display:flex;align-items:center;gap:6px;
+}
+.logo-badge{
+  font-size:.6rem;font-weight:800;padding:1px 6px;border-radius:99px;
+  background:linear-gradient(135deg,var(--mint2),var(--sky2));
+  -webkit-text-fill-color:white;
+  letter-spacing:.5px;
+}
+.header-nav{display:flex;gap:4px;background:rgba(200,230,255,0.22);border-radius:99px;padding:3px;}
+.nav-btn{
+  padding:5px 15px;border-radius:99px;font-size:.78rem;font-weight:700;
+  border:none;cursor:pointer;transition:all .22s;background:transparent;color:var(--text2);
+  font-family:inherit;
+}
+.nav-btn.active{background:#fff;color:var(--text);box-shadow:0 2px 10px rgba(80,150,220,.14);}
+.header-actions{display:flex;gap:6px;align-items:center;}
+.btn-icon{
+  width:34px;height:34px;border-radius:99px;border:1.5px solid var(--border);
+  background:var(--surface2);cursor:pointer;font-size:.95rem;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;
+}
+.btn-icon:hover{background:rgba(200,230,255,.35);transform:scale(1.05);}
+
+/* ═══════════════════════════════════════════
+   TAB PANELS
+═══════════════════════════════════════════ */
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* ═══════════════════════════════════════════
+   HERO SECTION
+═══════════════════════════════════════════ */
+.hero{
+  text-align:center;padding:52px 20px 36px;
+  max-width:700px;margin:0 auto;position:relative;
+}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:5px 14px;border-radius:99px;margin-bottom:18px;
+  background:rgba(255,255,255,0.75);backdrop-filter:blur(10px);
+  border:1px solid var(--border);font-size:.73rem;font-weight:700;color:var(--text2);
+}
+.eyebrow-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:linear-gradient(135deg,var(--mint2),var(--sky2));
+  animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.6;transform:scale(1.4);}}
+.hero h1{
+  font-size:clamp(1.9rem,6vw,3rem);font-weight:900;line-height:1.12;
+  letter-spacing:-1.5px;margin-bottom:14px;
+}
+.grad-text{
+  background:linear-gradient(135deg,var(--mint3) 0%,var(--sky3) 45%,var(--lav3) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero p{color:var(--text2);font-size:.97rem;line-height:1.65;max-width:480px;margin:0 auto 24px;}
+.hero-stats{
+  display:flex;justify-content:center;gap:24px;flex-wrap:wrap;
+}
+.stat-item{
+  background:var(--surface2);backdrop-filter:blur(10px);
+  border:1px solid var(--border);border-radius:var(--r-sm);
+  padding:10px 18px;text-align:center;min-width:90px;
+}
+.stat-num{font-size:1.4rem;font-weight:900;color:var(--sky3);}
+.stat-label{font-size:.68rem;font-weight:600;color:var(--text3);margin-top:1px;}
+
+/* Floating orbs in hero */
+.orb{
+  position:absolute;border-radius:50%;filter:blur(50px);opacity:.5;pointer-events:none;
+  animation:orbFloat ease-in-out infinite;
+}
+@keyframes orbFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-14px);}}
+.orb1{width:120px;height:120px;background:var(--mint);top:20px;left:-20px;animation-duration:5s;}
+.orb2{width:100px;height:100px;background:var(--pink);top:30px;right:-10px;animation-duration:6.5s;animation-delay:-2s;}
+.orb3{width:80px;height:80px;background:var(--yellow);bottom:0;left:40%;animation-duration:4.5s;animation-delay:-1s;}
+
+/* ═══════════════════════════════════════════
+   STEP PROGRESS BAR
+═══════════════════════════════════════════ */
+.step-progress{
+  display:flex;align-items:center;justify-content:center;
+  gap:0;padding:0 20px 20px;max-width:500px;margin:0 auto;
+}
+.step-item{
+  display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;
+}
+.step-circle{
+  width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.78rem;font-weight:800;
+  background:rgba(200,230,255,.3);color:var(--text3);
+  border:2px solid rgba(150,200,240,.3);
+  transition:all .35s;position:relative;z-index:1;
+}
+.step-circle.done{background:linear-gradient(135deg,var(--mint2),var(--sky2));color:#fff;border-color:transparent;box-shadow:0 4px 12px rgba(90,180,200,.3);}
+.step-circle.active{background:#fff;color:var(--sky3);border-color:var(--sky2);box-shadow:0 0 0 4px rgba(90,180,232,.15);}
+.step-label{font-size:.65rem;font-weight:700;color:var(--text3);}
+.step-line{height:2px;flex:1;background:rgba(150,200,240,.25);margin-bottom:17px;transition:background .4s;}
+.step-line.done{background:linear-gradient(90deg,var(--mint2),var(--sky2));}
+
+/* ═══════════════════════════════════════════
+   GLASS CARD (base component)
+═══════════════════════════════════════════ */
+.glass{
+  background:var(--surface);backdrop-filter:blur(16px) saturate(1.4);
+  border:1px solid var(--border);border-radius:var(--r);
+  box-shadow:var(--shadow);
+}
+.section-wrap{max-width:760px;margin:0 auto 18px;padding:0 16px;}
+.glass-card{padding:24px 22px;}
+.glass-card:hover{box-shadow:var(--shadow2);}
+.section-label{
+  font-size:.7rem;font-weight:800;letter-spacing:1.3px;
+  text-transform:uppercase;color:var(--text3);margin-bottom:14px;
+  display:flex;align-items:center;gap:7px;
+}
+.section-label-dot{
+  width:14px;height:14px;border-radius:4px;
+  background:linear-gradient(135deg,var(--mint2),var(--sky2));flex-shrink:0;
+}
+
+/* ═══════════════════════════════════════════
+   KEYWORD CHIPS
+═══════════════════════════════════════════ */
+.chip-grid{display:flex;flex-wrap:wrap;gap:7px;}
+.chip{
+  padding:7px 15px;border-radius:99px;font-size:.8rem;font-weight:700;
+  border:1.8px solid rgba(130,190,240,.4);
+  background:rgba(255,255,255,.65);color:var(--text2);
+  cursor:pointer;transition:all .22s;user-select:none;
+  display:inline-flex;align-items:center;gap:5px;
+}
+.chip:hover{transform:translateY(-2px);box-shadow:0 5px 16px rgba(90,160,220,.15);}
+.chip.sel{
+  border-color:transparent;color:#fff;
+  background:linear-gradient(135deg,var(--mint2),var(--sky2));
+  box-shadow:0 4px 14px rgba(90,170,210,.28);transform:translateY(-1px);
+}
+.chip-add{
+  padding:7px 13px;border-radius:99px;font-size:.78rem;font-weight:700;
+  border:1.8px dashed rgba(130,190,240,.45);background:transparent;
+  cursor:pointer;color:var(--text3);transition:all .2s;font-family:inherit;
+}
+.chip-add:hover{background:rgba(180,220,255,.2);}
+.custom-row{
+  display:flex;gap:8px;margin-top:11px;overflow:hidden;
+  max-height:0;transition:max-height .3s;
+}
+.custom-row.open{max-height:60px;}
+.input-round{
+  flex:1;padding:8px 16px;border-radius:99px;
+  border:1.8px solid rgba(130,200,240,.4);
+  background:rgba(255,255,255,.75);font-size:.83rem;
+  font-family:inherit;outline:none;transition:border-color .2s;
+}
+.input-round:focus{border-color:var(--sky2);}
+
+/* ═══════════════════════════════════════════
+   CAREER CARDS (icon grid)
+═══════════════════════════════════════════ */
+.career-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:9px;}
+.career-card{
+  padding:14px 12px;border-radius:var(--r-sm);
+  border:2px solid rgba(150,200,240,.3);
+  background:rgba(255,255,255,.55);
+  cursor:pointer;transition:all .25s;text-align:center;
+}
+.career-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(90,160,220,.12);}
+.career-card.sel{
+  border-color:transparent;
+  background:linear-gradient(135deg,rgba(94,207,184,.18),rgba(90,180,232,.18));
+  box-shadow:0 0 0 2px var(--mint2);
+}
+.cc-icon{font-size:1.6rem;margin-bottom:5px;}
+.cc-label{font-size:.78rem;font-weight:800;color:var(--text);}
+.cc-sub{font-size:.68rem;color:var(--text3);margin-top:2px;}
+
+/* ═══════════════════════════════════════════
+   RESEARCH DNA QUIZ (new!)
+═══════════════════════════════════════════ */
+.quiz-q{font-size:.92rem;font-weight:800;color:var(--text);margin-bottom:11px;display:flex;align-items:flex-start;gap:8px;}
+.quiz-num{
+  min-width:24px;height:24px;border-radius:50%;flex-shrink:0;margin-top:1px;
+  background:linear-gradient(135deg,var(--mint2),var(--sky2));
+  color:#fff;font-size:.72rem;font-weight:900;
+  display:flex;align-items:center;justify-content:center;
+}
+.quiz-opts{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px;}
+.quiz-opt{
+  padding:9px 14px;border-radius:var(--r-sm);border:1.8px solid rgba(150,200,240,.35);
+  background:rgba(255,255,255,.6);font-size:.79rem;font-weight:600;
+  cursor:pointer;transition:all .22s;font-family:inherit;flex:1;min-width:120px;text-align:center;
+}
+.quiz-opt:hover{transform:translateY(-2px);box-shadow:0 5px 16px rgba(90,160,220,.13);}
+.quiz-opt.sel{
+  border-color:transparent;color:#fff;
+  background:linear-gradient(135deg,var(--mint2),var(--sky2));
+  box-shadow:0 4px 14px rgba(90,170,210,.28);
+}
+
+/* ═══════════════════════════════════════════
+   DEPARTMENT FILTER (new!)
+═══════════════════════════════════════════ */
+.dept-grid{display:flex;flex-wrap:wrap;gap:7px;}
+.dept-chip{
+  padding:6px 14px;border-radius:99px;font-size:.75rem;font-weight:700;
+  border:1.5px solid rgba(150,200,240,.3);background:rgba(255,255,255,.6);
+  cursor:pointer;transition:all .2s;
+}
+.dept-chip:hover{background:rgba(180,220,255,.25);}
+.dept-chip.sel{
+  background:linear-gradient(135deg,var(--lav),var(--sky));
+  border-color:transparent;
+}
+
+/* ═══════════════════════════════════════════
+   CTA BUTTON
+═══════════════════════════════════════════ */
+.cta-wrap{text-align:center;padding:10px 20px 32px;}
+.btn-cta{
+  padding:16px 52px;border-radius:99px;font-size:1rem;font-weight:900;
+  border:none;cursor:pointer;color:#fff;font-family:inherit;
+  background:linear-gradient(135deg,var(--mint2) 0%,var(--sky2) 50%,var(--lav2) 100%);
+  background-size:200% 200%;
+  box-shadow:0 8px 32px rgba(90,160,200,.32);
+  animation:gradShift 4s ease infinite;
+  transition:transform .25s,box-shadow .25s;
+  position:relative;overflow:hidden;letter-spacing:-.3px;
+}
+.btn-cta::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.18),transparent);
+}
+.btn-cta:hover{transform:translateY(-3px);box-shadow:0 14px 40px rgba(90,160,200,.42);}
+@keyframes gradShift{0%,100%{background-position:0% 50%;}50%{background-position:100% 50%;}}
+
+/* ═══════════════════════════════════════════
+   RESULT SECTION
+═══════════════════════════════════════════ */
+#result-section{max-width:960px;margin:0 auto;padding:0 14px 50px;}
+.result-topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 0 14px;flex-wrap:wrap;gap:10px;
+}
+.result-heading{font-size:1.1rem;font-weight:900;}
+.result-sub{font-size:.72rem;color:var(--text3);margin-top:2px;}
+.filter-bar{display:flex;gap:5px;flex-wrap:wrap;}
+.filter-chip{
+  padding:4px 12px;border-radius:99px;font-size:.72rem;font-weight:700;
+  border:1.5px solid rgba(150,200,240,.35);
+  background:rgba(255,255,255,.65);cursor:pointer;transition:all .18s;
+}
+.filter-chip.active{
+  background:linear-gradient(135deg,var(--mint),var(--sky));
+  border-color:transparent;
+}
+.sort-row{display:flex;gap:6px;align-items:center;}
+.sort-label{font-size:.72rem;color:var(--text3);font-weight:600;}
+.sort-btn{
+  padding:4px 11px;border-radius:99px;font-size:.72rem;font-weight:700;
+  border:1.5px solid rgba(150,200,240,.3);background:rgba(255,255,255,.6);
+  cursor:pointer;transition:all .18s;
+}
+.sort-btn.active{background:linear-gradient(135deg,var(--lav),var(--sky));border-color:transparent;}
+
+/* ═══════════════════════════════════════════
+   LAB CARDS (grid)
+═══════════════════════════════════════════ */
+.lab-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(290px,1fr));
+  gap:16px;
+}
+
+/* Lab card color accent bars */
+.lab-card{
+  background:var(--surface);backdrop-filter:blur(14px);
+  border:1px solid var(--border);border-radius:var(--r);
+  box-shadow:var(--shadow);
+  cursor:pointer;transition:all .3s cubic-bezier(.34,1.56,.64,1);
+  position:relative;overflow:hidden;padding:20px 20px 16px;
+}
+.lab-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3.5px;
+  border-radius:var(--r) var(--r) 0 0;
+}
+.lab-card:nth-child(5n+1)::before{background:linear-gradient(90deg,var(--mint2),var(--sky2));}
+.lab-card:nth-child(5n+2)::before{background:linear-gradient(90deg,var(--pink2),var(--lav2));}
+.lab-card:nth-child(5n+3)::before{background:linear-gradient(90deg,var(--yellow2),var(--peach2));}
+.lab-card:nth-child(5n+4)::before{background:linear-gradient(90deg,var(--sky2),var(--lav2));}
+.lab-card:nth-child(5n+5)::before{background:linear-gradient(90deg,var(--mint2),var(--pink2));}
+.lab-card:hover{transform:translateY(-6px) scale(1.012);box-shadow:var(--shadow2);}
+.lab-card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px;}
+.lab-name{font-size:.95rem;font-weight:900;line-height:1.25;}
+.lab-prof{font-size:.73rem;color:var(--text3);margin-top:2px;}
+.match-pill{
+  padding:3px 9px;border-radius:99px;font-size:.72rem;font-weight:900;
+  background:linear-gradient(135deg,var(--mint2),var(--sky2));color:#fff;white-space:nowrap;flex-shrink:0;
+}
+.match-bar-bg{
+  height:6px;border-radius:99px;background:rgba(150,200,240,.18);
+  overflow:hidden;margin:9px 0 10px;
+}
+.match-bar{
+  height:100%;border-radius:99px;
+  background:linear-gradient(90deg,var(--mint2),var(--sky2));
+  transition:width 1.2s cubic-bezier(.34,1.56,.64,1);width:0%;
+}
+.lab-summary{font-size:.77rem;color:var(--text2);line-height:1.6;margin-bottom:10px;}
+.lab-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;}
+.lab-tag{
+  padding:2px 8px;border-radius:99px;font-size:.67rem;font-weight:700;
+  background:rgba(180,220,255,.22);color:var(--text2);
+  border:1px solid rgba(140,190,240,.28);
+}
+.lab-meta{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;}
+.meta-item{
+  padding:7px 9px;border-radius:var(--r-sm);
+  background:rgba(240,250,255,.6);
+}
+.meta-label{font-size:.65rem;color:var(--text3);font-weight:700;margin-bottom:2px;}
+.meta-val{font-size:.73rem;font-weight:700;line-height:1.3;}
+.lab-card-btns{display:flex;gap:6px;}
+.btn-sm{
+  flex:1;padding:8px 10px;border-radius:var(--r-sm);font-size:.73rem;font-weight:800;
+  border:none;cursor:pointer;transition:all .22s;text-align:center;font-family:inherit;
+}
+.btn-outline{background:rgba(180,220,255,.18);border:1.5px solid rgba(140,190,240,.35);color:var(--text2);}
+.btn-outline:hover{background:rgba(180,220,255,.36);}
+.btn-primary{background:linear-gradient(135deg,var(--mint2),var(--sky2));color:#fff;box-shadow:0 3px 12px rgba(90,170,200,.25);}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(90,170,200,.35);}
+
+/* Saved/bookmark badge */
+.bookmark-btn{
+  position:absolute;top:12px;right:12px;width:28px;height:28px;
+  border-radius:50%;border:none;background:rgba(255,255,255,.7);
+  cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;
+  transition:all .2s;opacity:0;
+}
+.lab-card:hover .bookmark-btn{opacity:1;}
+.bookmark-btn.saved{opacity:1;background:var(--yellow);color:#e8b800;}
+
+/* New ribbon */
+.new-ribbon{
+  position:absolute;top:10px;left:-1px;
+  background:linear-gradient(135deg,var(--pink2),var(--lav2));
+  color:#fff;font-size:.6rem;font-weight:900;
+  padding:2px 8px;border-radius:0 6px 6px 0;letter-spacing:.5px;
+}
+
+/* ═══════════════════════════════════════════
+   COMPARE TRAY
+═══════════════════════════════════════════ */
+.compare-tray{
+  position:fixed;bottom:76px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:rgba(20,30,55,.88);backdrop-filter:blur(16px);
+  border-radius:99px;padding:10px 18px;
+  display:flex;align-items:center;gap:12px;
+  color:#fff;font-size:.8rem;font-weight:700;
+  box-shadow:0 8px 32px rgba(0,0,0,.22);z-index:300;
+  transition:all .35s cubic-bezier(.34,1.56,.64,1);
+  white-space:nowrap;opacity:0;pointer-events:none;
+}
+.compare-tray.show{opacity:1;pointer-events:all;transform:translateX(-50%) translateY(0);}
+.compare-names{display:flex;gap:5px;}
+.compare-chip-nm{
+  padding:3px 10px;border-radius:99px;font-size:.7rem;
+  background:rgba(94,207,184,.3);border:1px solid rgba(94,207,184,.5);
+}
+.btn-cmp-go{
+  padding:6px 16px;border-radius:99px;font-size:.78rem;font-weight:800;
+  background:linear-gradient(135deg,var(--mint2),var(--sky2));border:none;
+  color:#fff;cursor:pointer;font-family:inherit;
+}
+.btn-cmp-clr{background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;font-size:1rem;}
+
+/* ═══════════════════════════════════════════
+   MODAL SYSTEM
+═══════════════════════════════════════════ */
+.modal-ov{
+  position:fixed;inset:0;z-index:400;
+  background:rgba(15,25,60,.4);backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;padding:14px;
+  opacity:0;pointer-events:none;transition:opacity .3s;
+}
+.modal-ov.open{opacity:1;pointer-events:all;}
+.modal-box{
+  background:rgba(244,250,255,.97);backdrop-filter:blur(22px);
+  border-radius:var(--r);max-width:680px;width:100%;max-height:92vh;
+  overflow-y:auto;box-shadow:0 28px 80px rgba(50,90,180,.18);
+  transform:translateY(32px) scale(.97);
+  transition:all .38s cubic-bezier(.34,1.56,.64,1);
+  border:1px solid rgba(180,220,255,.4);
+}
+.modal-ov.open .modal-box{transform:translateY(0) scale(1);}
+.modal-head{
+  padding:22px 22px 0;display:flex;
+  justify-content:space-between;align-items:flex-start;
+}
+.modal-title{font-size:1.22rem;font-weight:900;}
+.modal-sub{font-size:.74rem;color:var(--text3);margin-top:3px;}
+.modal-close{
+  width:32px;height:32px;border-radius:50%;border:none;
+  background:rgba(150,200,240,.18);cursor:pointer;font-size:1rem;
+  display:flex;align-items:center;justify-content:center;transition:background .2s;flex-shrink:0;
+}
+.modal-close:hover{background:rgba(150,200,240,.36);}
+.modal-body{padding:18px 22px 22px;}
+
+/* ═══════════════════════════════════════════
+   DECISION CARD (5-axis)
+═══════════════════════════════════════════ */
+.dc-radar{display:flex;justify-content:center;margin-bottom:16px;}
+.dc-card{
+  background:linear-gradient(135deg,rgba(200,245,236,.25),rgba(194,228,247,.25));
+  border-radius:var(--r-sm);padding:16px;margin-bottom:14px;
+  border:1px solid rgba(180,220,255,.3);
+}
+.dc-title{
+  font-size:.68rem;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;
+  color:var(--text3);margin-bottom:10px;
+}
+.dc-axes{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.dc-axis{
+  padding:10px 11px;background:rgba(255,255,255,.68);
+  border-radius:10px;border:1px solid rgba(180,220,255,.2);
+}
+.dc-axis-icon{font-size:1.05rem;margin-bottom:3px;}
+.dc-axis-label{font-size:.64rem;color:var(--text3);font-weight:700;}
+.dc-axis-val{font-size:.79rem;font-weight:800;margin-top:2px;line-height:1.3;}
+
+/* Match score ring */
+.score-ring-wrap{display:flex;justify-content:center;margin-bottom:14px;}
+
+/* ═══════════════════════════════════════════
+   AI CHAT PANEL
+═══════════════════════════════════════════ */
+.ai-panel{
+  background:rgba(255,255,255,.65);border-radius:var(--r-sm);
+  border:1px solid rgba(150,200,240,.3);overflow:hidden;
+}
+.ai-head{
+  padding:11px 14px;
+  background:linear-gradient(135deg,rgba(94,207,184,.12),rgba(90,180,232,.12));
+  font-size:.78rem;font-weight:800;display:flex;align-items:center;gap:7px;
+  border-bottom:1px solid rgba(150,200,240,.2);
+}
+.ai-dot{
+  width:8px;height:8px;border-radius:50%;flex-shrink:0;
+  background:var(--mint2);animation:pulse 2s infinite;
+}
+.ai-msgs{
+  height:190px;overflow-y:auto;padding:11px;
+  display:flex;flex-direction:column;gap:8px;
+}
+.ai-msg{
+  max-width:88%;padding:8px 12px;border-radius:12px;
+  font-size:.78rem;line-height:1.55;
+}
+.ai-msg.user{
+  background:linear-gradient(135deg,var(--mint2),var(--sky2));
+  color:#fff;align-self:flex-end;border-radius:12px 12px 2px 12px;
+}
+.ai-msg.bot{
+  background:rgba(240,250,255,.95);align-self:flex-start;
+  border:1px solid rgba(150,200,240,.22);border-radius:12px 12px 12px 2px;
+}
+.ai-typing{display:flex;gap:4px;align-items:center;padding:8px 12px;}
+.ai-typing span{
+  width:7px;height:7px;border-radius:50%;background:var(--sky2);
+  animation:typing .9s infinite;
+}
+.ai-typing span:nth-child(2){animation-delay:.18s;}
+.ai-typing span:nth-child(3){animation-delay:.36s;}
+@keyframes typing{0%,100%{opacity:.3;transform:scale(1);}50%{opacity:1;transform:scale(1.3);}}
+.ai-input-row{display:flex;gap:6px;padding:9px;border-top:1px solid rgba(150,200,240,.2);}
+.ai-input{
+  flex:1;padding:7px 14px;border-radius:99px;
+  border:1.5px solid rgba(140,200,240,.35);
+  font-size:.78rem;font-family:inherit;outline:none;
+  background:rgba(255,255,255,.8);
+}
+.ai-send{
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,var(--mint2),var(--sky2));
+  border:none;cursor:pointer;color:#fff;font-size:.95rem;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+
+/* ═══════════════════════════════════════════
+   EMAIL MODAL
+═══════════════════════════════════════════ */
+.email-box{
+  background:rgba(240,250,255,.85);border-radius:var(--r-sm);
+  padding:15px 17px;font-size:.8rem;line-height:1.8;
+  border:1px solid rgba(150,200,240,.3);margin-bottom:13px;
+  white-space:pre-wrap;max-height:260px;overflow-y:auto;
+}
+.email-btns{display:flex;gap:7px;flex-wrap:wrap;}
+.btn-email{
+  padding:8px 17px;border-radius:99px;font-size:.77rem;
+  font-weight:800;border:none;cursor:pointer;font-family:inherit;
+  transition:all .22s;
+}
+.btn-email:hover{transform:translateY(-1px);box-shadow:0 5px 16px rgba(0,0,0,.12);}
+.btn-naver{background:#03C75A;color:#fff;}
+.btn-gmail{background:#EA4335;color:#fff;}
+.btn-kakao{background:#FEE500;color:#3c1e1e;}
+.btn-copy{background:rgba(150,200,240,.22);border:1.5px solid rgba(140,190,240,.36);color:var(--text);}
+
+/* ═══════════════════════════════════════════
+   COMPARE MODAL
+═══════════════════════════════════════════ */
+.cmp-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.cmp-col-title{font-weight:900;font-size:.92rem;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid rgba(180,220,255,.35);}
+.cmp-row{padding:7px 0;border-bottom:1px solid rgba(180,220,255,.2);}
+.cmp-row-label{font-size:.67rem;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px;}
+.cmp-row-val{font-size:.8rem;font-weight:600;line-height:1.4;}
+
+/* ═══════════════════════════════════════════
+   FAVORITES PANEL (NEW!)
+═══════════════════════════════════════════ */
+.fav-empty{
+  text-align:center;padding:40px 20px;
+  color:var(--text3);font-size:.88rem;
+}
+.fav-empty .fav-icon{font-size:2.5rem;margin-bottom:10px;opacity:.5;}
+
+/* ═══════════════════════════════════════════
+   TRANSLATOR TAB
+═══════════════════════════════════════════ */
+.tr-wrap{max-width:880px;margin:0 auto;padding:20px 14px 50px;}
+.tr-hero{text-align:center;padding:32px 20px 20px;}
+.tr-hero h2{
+  font-size:clamp(1.4rem,4vw,2rem);font-weight:900;letter-spacing:-.8px;
+  background:linear-gradient(135deg,var(--sky3),var(--lav3));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-bottom:6px;
+}
+.api-bar{padding:20px 22px;}
+.api-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+@media(max-width:560px){.api-grid{grid-template-columns:1fr;}}
+.api-label{font-size:.71rem;font-weight:800;color:var(--text3);margin-bottom:4px;}
+.api-input{
+  width:100%;padding:8px 13px;border-radius:var(--r-sm);
+  border:1.5px solid rgba(140,200,240,.38);font-size:.8rem;
+  background:rgba(255,255,255,.75);font-family:inherit;outline:none;
+}
+.api-input:focus{border-color:var(--sky2);}
+.settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:9px;margin-top:12px;}
+.sel-pill{
+  width:100%;padding:8px 13px;border-radius:var(--r-sm);
+  border:1.5px solid rgba(140,200,240,.38);font-size:.8rem;
+  background:rgba(255,255,255,.75);font-family:inherit;outline:none;cursor:pointer;
+}
+.upload-zone{
+  background:var(--surface2);backdrop-filter:blur(12px);
+  border-radius:var(--r);border:2px dashed rgba(120,190,240,.44);
+  padding:36px 20px;text-align:center;margin-bottom:16px;
+  transition:all .25s;cursor:pointer;position:relative;
+}
+.upload-zone:hover,.upload-zone.drag-on{
+  border-color:var(--sky2);background:rgba(190,228,247,.15);
+  transform:translateY(-2px);
+}
+.upload-icon{font-size:2.2rem;margin-bottom:8px;opacity:.7;}
+.upload-txt{font-size:.88rem;font-weight:700;color:var(--text2);}
+.upload-sub{font-size:.72rem;color:var(--text3);margin-top:4px;}
+#file-input{position:absolute;inset:0;opacity:0;cursor:pointer;}
+.file-list{margin-top:11px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;}
+.file-chip{
+  padding:4px 11px;border-radius:99px;font-size:.72rem;font-weight:700;
+  background:linear-gradient(135deg,rgba(94,207,184,.18),rgba(90,180,232,.18));
+  border:1px solid rgba(140,200,240,.35);
+  display:flex;align-items:center;gap:5px;
+}
+.file-rm{cursor:pointer;opacity:.5;}
+.opts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:8px;margin-top:11px;}
+.toggle-item{
+  display:flex;align-items:center;gap:9px;padding:8px 12px;
+  border-radius:var(--r-sm);background:rgba(240,250,255,.6);
+  border:1px solid rgba(140,200,240,.22);cursor:pointer;
+}
+.toggle-item input{display:none;}
+.tog{
+  width:33px;height:18px;border-radius:99px;background:rgba(140,200,240,.28);
+  position:relative;transition:background .25s;flex-shrink:0;
+}
+.tog::after{
+  content:'';position:absolute;width:13px;height:13px;border-radius:50%;
+  background:#fff;top:2.5px;left:2.5px;transition:left .25s;
+  box-shadow:0 1px 4px rgba(0,0,0,.14);
+}
+.toggle-item input:checked~.tog{background:linear-gradient(135deg,var(--mint2),var(--sky2));}
+.toggle-item input:checked~.tog::after{left:17.5px;}
+.tog-label{font-size:.76rem;font-weight:700;}
+.prog-wrap{display:none;margin-bottom:16px;}
+.prog-wrap.show{display:block;}
+.prog-bg{height:7px;border-radius:99px;background:rgba(140,200,240,.18);overflow:hidden;}
+.prog-fill{
+  height:100%;border-radius:99px;
+  background:linear-gradient(90deg,var(--mint2),var(--sky2),var(--lav2));
+  background-size:200% 100%;
+  animation:shimmer 1.5s linear infinite;
+  transition:width .5s;
+}
+@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+.prog-txt{font-size:.75rem;color:var(--text3);margin-top:5px;text-align:center;}
+.tr-results{display:none;}
+.tr-results.show{display:block;}
+.result-tab-bar{
+  display:flex;border-bottom:1px solid rgba(180,220,255,.3);
+  background:rgba(240,250,255,.5);overflow-x:auto;
+}
+.result-tab-btn{
+  padding:11px 17px;font-size:.77rem;font-weight:800;white-space:nowrap;
+  border:none;background:none;cursor:pointer;color:var(--text3);
+  border-bottom:3px solid transparent;transition:all .2s;font-family:inherit;
+}
+.result-tab-btn.active{color:var(--text);border-bottom-color:var(--sky2);}
+.result-tab-panel{padding:18px 20px;display:none;}
+.result-tab-panel.active{display:block;}
+.tr-text{
+  font-size:.83rem;line-height:1.85;white-space:pre-wrap;
+  max-height:500px;overflow-y:auto;
+}
+.dl-btns{display:flex;gap:7px;margin-top:12px;flex-wrap:wrap;}
+.btn-dl{
+  padding:7px 16px;border-radius:99px;font-size:.75rem;font-weight:800;
+  border:1.5px solid rgba(140,200,240,.38);
+  background:rgba(255,255,255,.75);cursor:pointer;font-family:inherit;transition:all .2s;
+}
+.btn-dl:hover{background:rgba(180,220,255,.3);}
+.kw-cloud{display:flex;flex-wrap:wrap;gap:7px;}
+.kw-tag{
+  padding:5px 13px;border-radius:99px;font-size:.76rem;font-weight:800;
+  border:none;cursor:default;
+}
+.sum-block{margin-bottom:13px;}
+.sum-block h4{font-size:.73rem;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;}
+.sum-block p{font-size:.82rem;line-height:1.7;}
+.ref-item{font-size:.76rem;padding:7px 0;border-bottom:1px solid rgba(180,220,255,.22);line-height:1.6;}
+
+/* ═══════════════════════════════════════════
+   ADMIN MODALS
+═══════════════════════════════════════════ */
+.adm-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+@media(max-width:520px){.adm-form-grid{grid-template-columns:1fr;}}
+.form-grp{display:flex;flex-direction:column;gap:3px;}
+.form-grp.full{grid-column:1/-1;}
+.form-label{font-size:.69rem;font-weight:800;color:var(--text3);}
+.form-input{
+  padding:8px 12px;border-radius:var(--r-sm);
+  border:1.5px solid rgba(140,200,240,.38);
+  font-size:.8rem;background:rgba(255,255,255,.75);font-family:inherit;outline:none;
+}
+.form-input:focus{border-color:var(--sky2);}
+.adm-lab-list{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;}
+.adm-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 13px;border-radius:var(--r-sm);
+  background:rgba(240,250,255,.75);border:1px solid rgba(140,200,240,.22);
+}
+.adm-name{font-size:.8rem;font-weight:800;}
+.adm-btns{display:flex;gap:5px;}
+.btn-edit{padding:3px 11px;border-radius:99px;font-size:.69rem;font-weight:800;border:none;cursor:pointer;background:rgba(140,200,240,.22);color:var(--text);}
+.btn-del{padding:3px 11px;border-radius:99px;font-size:.69rem;font-weight:800;border:none;cursor:pointer;background:rgba(255,140,140,.18);color:#c0392b;}
+
+/* ═══════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════ */
+#toast{
+  position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:rgba(20,30,55,.88);color:#fff;padding:10px 22px;
+  border-radius:99px;font-size:.8rem;font-weight:700;z-index:9998;
+  opacity:0;transition:all .3s;white-space:nowrap;backdrop-filter:blur(12px);
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ═══════════════════════════════════════════
+   CONFETTI
+═══════════════════════════════════════════ */
+#confetti-cv{position:fixed;inset:0;z-index:9999;pointer-events:none;}
+
+/* ═══════════════════════════════════════════
+   MOBILE NAV
+═══════════════════════════════════════════ */
+.mobile-nav{
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;
+  background:rgba(240,247,255,.92);backdrop-filter:blur(20px);
+  border-top:1px solid rgba(180,220,255,.32);
+  padding:6px 0 max(6px,env(safe-area-inset-bottom));
+}
+.mobile-nav-inner{display:flex;justify-content:space-around;}
+.mnb{
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:4px 14px;background:none;border:none;cursor:pointer;
+  font-size:.62rem;font-weight:800;color:var(--text3);font-family:inherit;transition:color .2s;
+}
+.mnb.active{color:var(--mint3);}
+.mnb-icon{font-size:1.25rem;}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+@media(max-width:640px){
+  header{padding:0 12px;}
+  .header-nav{display:none;}
+  .mobile-nav{display:block;}
+  body{padding-bottom:68px;}
+  .hero{padding:36px 14px 24px;}
+  .hero h1{font-size:1.8rem;}
+  .hero-stats{gap:12px;}
+  .section-wrap{padding:0 10px;}
+  .glass-card{padding:18px 16px;}
+  .career-grid{grid-template-columns:repeat(2,1fr);}
+  .lab-grid{grid-template-columns:1fr;}
+  .dc-axes{grid-template-columns:1fr;}
+  .cmp-grid{grid-template-columns:1fr;}
+  .api-grid{grid-template-columns:1fr;}
+  .tr-wrap{padding:14px 10px 50px;}
+  .adm-form-grid{grid-template-columns:1fr;}
+  .modal-box{max-height:96vh;}
+}
+@media(min-width:641px){
+  .mobile-nav{display:none!important;}
+}
+</style>
+</head>
+<body>
+<canvas id="confetti-cv"></canvas>
+<canvas id="canvas-bg"></canvas>
+
+<div id="app">
+
+<!-- ══ HEADER ══ -->
+<header>
+  <div class="logo">
+    🧭 ResearchPath
+    <span class="logo-badge">v2</span>
+  </div>
+  <div class="header-nav">
+    <button class="nav-btn active" onclick="switchTab('rp')">🔍 연구실 탐색</button>
+    <button class="nav-btn" onclick="switchTab('tr')">📄 논문 번역기</button>
+    <button class="nav-btn" onclick="switchTab('fav')">⭐ 즐겨찾기</button>
+  </div>
+  <div class="header-actions">
+    <button class="btn-icon" title="관리자" onclick="openAdmin()">⚙️</button>
+    <button class="btn-icon" title="정보" onclick="showAbout()">ℹ️</button>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════
+     TAB: RESEARCH PATH
+══════════════════════════════════════ -->
+<div id="tab-rp" class="tab-panel active">
+
+  <!-- STEP 1: Select -->
+  <div id="step-select">
+
+    <!-- Hero -->
+    <div class="hero" style="position:relative;overflow:hidden;">
+      <div class="orb orb1"></div>
+      <div class="orb orb2"></div>
+      <div class="orb orb3"></div>
+      <div class="hero-eyebrow">
+        <div class="eyebrow-dot"></div>
+        인맥 없이도 최고의 연구실을 찾을 수 있어요
+      </div>
+      <h1><span class="grad-text">내 연구실,</span><br>30초에 결정한다</h1>
+      <p>관심 분야·진로·연구 스타일만 고르면<br>매칭 카드 + 컨택 메일 + AI 상담까지 완성</p>
+      <div class="hero-stats">
+        <div class="stat-item"><div class="stat-num" id="stat-labs">6</div><div class="stat-label">등록된 연구실</div></div>
+        <div class="stat-item"><div class="stat-num">5축</div><div class="stat-label">결정 카드</div></div>
+        <div class="stat-item"><div class="stat-num">AI</div><div class="stat-label">실시간 상담</div></div>
+      </div>
+    </div>
+
+    <!-- Step Progress -->
+    <div class="step-progress">
+      <div class="step-item">
+        <div class="step-circle active" id="sc0">1</div>
+        <div class="step-label">분야</div>
+      </div>
+      <div class="step-line" id="sl01"></div>
+      <div class="step-item">
+        <div class="step-circle" id="sc1">2</div>
+        <div class="step-label">스타일</div>
+      </div>
+      <div class="step-line" id="sl12"></div>
+      <div class="step-item">
+        <div class="step-circle" id="sc2">3</div>
+        <div class="step-label">진로</div>
+      </div>
+      <div class="step-line" id="sl23"></div>
+      <div class="step-item">
+        <div class="step-circle" id="sc3">4</div>
+        <div class="step-label">학과</div>
+      </div>
+    </div>
+
+    <!-- Section 1: Keywords -->
+    <div class="section-wrap">
+      <div class="glass glass-card">
+        <div class="section-label"><div class="section-label-dot"></div>📌 관심 분야 (복수 선택 가능)</div>
+        <div class="chip-grid" id="kw-chips"></div>
+        <div class="custom-row" id="custom-row">
+          <input class="input-round" id="custom-kw" placeholder="키워드 직접 입력..." maxlength="20">
+          <button class="btn-sm btn-primary" style="flex:none;padding:8px 18px;" onclick="addCustomKw()">추가</button>
+        </div>
+        <button class="chip-add" style="margin-top:10px;" onclick="toggleCustomRow()">+ 직접 추가</button>
+      </div>
+    </div>
+
+    <!-- Section 2: Quiz -->
+    <div class="section-wrap">
+      <div class="glass glass-card">
+        <div class="section-label"><div class="section-label-dot" style="background:linear-gradient(135deg,var(--pink2),var(--lav2));"></div>🎯 나의 연구 DNA 퀴즈</div>
+        <div id="quiz-list"></div>
+      </div>
+    </div>
+
+    <!-- Section 3: Career -->
+    <div class="section-wrap">
+      <div class="glass glass-card">
+        <div class="section-label"><div class="section-label-dot" style="background:linear-gradient(135deg,var(--yellow2),var(--peach2));"></div>🚀 진로 우선순위</div>
+        <div class="career-grid" id="career-grid"></div>
+      </div>
+    </div>
+
+    <!-- Section 4: Department Filter (NEW) -->
+    <div class="section-wrap">
+      <div class="glass glass-card">
+        <div class="section-label"><div class="section-label-dot" style="background:linear-gradient(135deg,var(--lav2),var(--sky2));"></div>🏛️ 학과 계열 (선택사항)</div>
+        <div class="dept-grid" id="dept-grid"></div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-wrap">
+      <button class="btn-cta" onclick="runMatch()">✦ 내 연구실 추천받기 →</button>
+      <div style="font-size:.7rem;color:var(--text3);margin-top:10px;">분야만 선택해도 추천 가능해요</div>
+    </div>
+
+  </div><!-- /step-select -->
+
+  <!-- STEP 2: Results -->
+  <div id="step-result" style="display:none;">
+    <div id="result-section">
+      <div class="result-topbar">
+        <div>
+          <div class="result-heading">추천 연구실</div>
+          <div class="result-sub" id="result-sub-text">매칭 점수 기준으로 정렬</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
+          <div class="sort-row">
+            <span class="sort-label">정렬</span>
+            <button class="sort-btn active" onclick="sortCards('score',this)">매칭순</button>
+            <button class="sort-btn" onclick="sortCards('contract',this)">계약대학원</button>
+            <button class="sort-btn" onclick="sortCards('alpha',this)">가나다</button>
+          </div>
+          <div class="filter-bar" id="filter-bar"></div>
+        </div>
+      </div>
+      <div class="lab-grid" id="lab-cards"></div>
+      <div style="text-align:center;margin-top:24px;">
+        <button class="chip" onclick="showStep('step-select')">← 조건 다시 설정</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /tab-rp -->
+
+<!-- ══════════════════════════════════════
+     TAB: TRANSLATOR
+══════════════════════════════════════ -->
+<div id="tab-tr" class="tab-panel">
+  <div class="tr-wrap">
+    <div class="tr-hero">
+      <h2>📄 논문 번역기 Pro</h2>
+      <p style="font-size:.88rem;color:var(--text2);">PDF 업로드 → AI 번역 · 요약 · 키워드 · Q&A · 다운로드</p>
+    </div>
+
+    <!-- API Keys -->
+    <div class="glass glass-card api-bar" style="margin-bottom:14px;">
+      <div class="section-label"><div class="section-label-dot"></div>⚙️ API 설정</div>
+      <div class="api-grid">
+        <div>
+          <div class="api-label">OpenAI API Key (번역용)</div>
+          <input class="api-input" id="oai-key" type="password" placeholder="sk-..." oninput="saveKeys()">
+        </div>
+        <div>
+          <div class="api-label">Anthropic API Key (Q&A용, 선택)</div>
+          <input class="api-input" id="ant-key" type="password" placeholder="sk-ant-..." oninput="saveKeys()">
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div class="glass glass-card" style="margin-bottom:14px;padding:20px 22px;">
+      <div class="section-label"><div class="section-label-dot" style="background:linear-gradient(135deg,var(--sky2),var(--lav2));"></div>🌐 번역 설정</div>
+      <div class="settings-grid">
+        <div><div class="api-label">모델</div>
+          <select class="sel-pill" id="tr-model">
+            <option value="gpt-4o-mini">gpt-4o-mini (빠름)</option>
+            <option value="gpt-4o">gpt-4o (고품질)</option>
+          </select>
+        </div>
+        <div><div class="api-label">번역 언어</div>
+          <select class="sel-pill" id="tr-lang">
+            <option value="한국어">한국어</option>
+            <option value="영어">영어</option>
+            <option value="일본어">일본어</option>
+          </select>
+        </div>
+        <div><div class="api-label">번역 스타일</div>
+          <select class="sel-pill" id="tr-style">
+            <option value="학술 격식체">학술 격식체</option>
+            <option value="구어체">구어체</option>
+            <option value="신문 기사체">신문 기사체</option>
+            <option value="교과서체">교과서체</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upload -->
+    <div class="glass upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
+      <input type="file" id="file-input" accept=".pdf" multiple onchange="handleFiles(this.files)">
+      <div class="upload-icon">📁</div>
+      <div class="upload-txt">PDF를 클릭하거나 드래그해서 올리세요</div>
+      <div class="upload-sub">여러 파일 동시 업로드 가능 · 최대 50MB</div>
+      <div class="file-list" id="file-list"></div>
+    </div>
+
+    <!-- Options -->
+    <div class="glass glass-card" style="margin-bottom:14px;">
+      <div class="section-label"><div class="section-label-dot" style="background:linear-gradient(135deg,var(--yellow2),var(--mint2));"></div>🔧 번역 옵션</div>
+      <div class="opts-grid">
+        <label class="toggle-item"><input type="checkbox" id="opt-formula" checked><div class="tog"></div><span class="tog-label">수식 보존</span></label>
+        <label class="toggle-item"><input type="checkbox" id="opt-term" checked><div class="tog"></div><span class="tog-label">전문용어 병기</span></label>
+        <label class="toggle-item"><input type="checkbox" id="opt-summary" checked><div class="tog"></div><span class="tog-label">논문 요약</span></label>
+        <label class="toggle-item"><input type="checkbox" id="opt-kw" checked><div class="tog"></div><span class="tog-label">키워드 추출</span></label>
+        <label class="toggle-item"><input type="checkbox" id="opt-ref" checked><div class="tog"></div><span class="tog-label">참고문헌 정리</span></label>
+      </div>
+      <div style="margin-top:11px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div>
+          <div class="api-label" style="margin-bottom:3px;">번역 전 요청사항</div>
+          <input class="api-input" id="pre-req" placeholder="예: 수식 원문 유지...">
+        </div>
+        <div>
+          <div class="api-label" style="margin-bottom:3px;">번역 후 수정 요청</div>
+          <input class="api-input" id="post-req" placeholder="예: 결론 더 쉽게...">
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="prog-wrap glass" id="prog-wrap" style="padding:14px 18px;">
+      <div class="prog-bg"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+      <div class="prog-txt" id="prog-txt">번역 준비 중...</div>
+    </div>
+
+    <!-- CTA -->
+    <div style="text-align:center;margin-bottom:16px;">
+      <button class="btn-cta" onclick="startTranslation()">🚀 번역 시작</button>
+    </div>
+
+    <!-- Results -->
+    <div class="glass tr-results" id="tr-result-wrap">
+      <div class="result-tab-bar">
+        <button class="result-tab-btn active" onclick="switchTrTab('translation',this)">📝 번역문</button>
+        <button class="result-tab-btn" onclick="switchTrTab('summary',this)">📋 요약</button>
+        <button class="result-tab-btn" onclick="switchTrTab('keywords',this)">🔑 키워드</button>
+        <button class="result-tab-btn" onclick="switchTrTab('refs',this)">📚 참고문헌</button>
+        <button class="result-tab-btn" onclick="switchTrTab('qa',this)">💬 Q&A</button>
+      </div>
+      <div id="tr-panel-translation" class="result-tab-panel active">
+        <div class="tr-text" id="tr-text">(번역 결과가 여기에 표시됩니다)</div>
+        <div class="dl-btns">
+          <button class="btn-dl" onclick="dlTxt()">⬇ TXT</button>
+          <button class="btn-dl" onclick="dlHtml()">⬇ HTML</button>
+        </div>
+      </div>
+      <div id="tr-panel-summary" class="result-tab-panel"><div id="tr-summary"></div></div>
+      <div id="tr-panel-keywords" class="result-tab-panel"><div class="kw-cloud" id="tr-keywords"></div></div>
+      <div id="tr-panel-refs" class="result-tab-panel"><div id="tr-refs"></div></div>
+      <div id="tr-panel-qa" class="result-tab-panel">
+        <div class="ai-panel">
+          <div class="ai-head"><div class="ai-dot"></div>논문 Q&A</div>
+          <div class="ai-msgs" id="qa-msgs"><div class="ai-msg bot">번역된 논문에 대해 궁금한 점을 물어보세요! 📚</div></div>
+          <div class="ai-input-row">
+            <input class="ai-input" id="qa-input" placeholder="논문에 대해 질문하세요..." onkeydown="if(event.key==='Enter')sendQa()">
+            <button class="ai-send" onclick="sendQa()">↑</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /tab-tr -->
+
+<!-- ══════════════════════════════════════
+     TAB: FAVORITES (NEW!)
+══════════════════════════════════════ -->
+<div id="tab-fav" class="tab-panel">
+  <div style="max-width:760px;margin:0 auto;padding:24px 14px 50px;">
+    <div class="hero" style="padding:36px 14px 24px;">
+      <h1 style="font-size:1.8rem;"><span class="grad-text">⭐ 즐겨찾기</span></h1>
+      <p>저장한 연구실을 한눈에 비교하세요</p>
+    </div>
+    <div id="fav-list"></div>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<!-- ══ MOBILE NAV ══ -->
+<nav class="mobile-nav">
+  <div class="mobile-nav-inner">
+    <button class="mnb active" id="mnb-rp" onclick="switchTab('rp');setMnb('mnb-rp')">
+      <span class="mnb-icon">🔍</span>연구실
+    </button>
+    <button class="mnb" id="mnb-tr" onclick="switchTab('tr');setMnb('mnb-tr')">
+      <span class="mnb-icon">📄</span>번역기
+    </button>
+    <button class="mnb" id="mnb-fav" onclick="switchTab('fav');setMnb('mnb-fav')">
+      <span class="mnb-icon">⭐</span>즐겨찾기
+    </button>
+  </div>
+</nav>
+
+<!-- ══ COMPARE TRAY ══ -->
+<div class="compare-tray" id="compare-tray">
+  <span>비교 모드</span>
+  <div class="compare-names" id="compare-names"></div>
+  <button class="btn-cmp-go" onclick="openCompareModal()">비교하기 →</button>
+  <button class="btn-cmp-clr" onclick="clearCompare()">✕</button>
+</div>
+
+<!-- ══════════════════════════════════════
+     MODALS
+══════════════════════════════════════ -->
+
+<!-- Decision Card Modal -->
+<div class="modal-ov" id="modal-decision" onclick="closeMOvBg(event,'modal-decision')">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title" id="mdl-lab-name"></div>
+        <div class="modal-sub" id="mdl-lab-sub"></div>
+      </div>
+      <button class="modal-close" onclick="closeMdl('modal-decision')">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Score ring + radar -->
+      <div style="display:flex;gap:16px;align-items:center;margin-bottom:14px;flex-wrap:wrap;justify-content:center;">
+        <div class="score-ring-wrap"><canvas id="score-ring" width="100" height="100"></canvas></div>
+        <div class="dc-radar"><canvas id="radar-cv" width="200" height="200"></canvas></div>
+      </div>
+      <!-- 5-axis decision card -->
+      <div class="dc-card">
+        <div class="dc-title">✦ 5축 결정 카드</div>
+        <div class="dc-axes" id="dc-axes"></div>
+      </div>
+      <!-- Paper info -->
+      <div style="margin-bottom:14px;">
+        <div class="api-label" style="margin-bottom:5px;">📄 대표 논문</div>
+        <div style="font-size:.84rem;font-weight:800;" id="mdl-paper"></div>
+        <div style="font-size:.76rem;color:var(--text2);margin-top:3px;line-height:1.5;" id="mdl-paper-sum"></div>
+        <a id="mdl-scholar" href="#" target="_blank" style="font-size:.72rem;color:var(--sky3);margin-top:4px;display:inline-block;">구글 스칼라 →</a>
+      </div>
+      <!-- AI Chat -->
+      <div class="api-label" style="margin-bottom:5px;">🤖 AI 상담</div>
+      <div class="ai-panel" id="mdl-ai-panel">
+        <div class="ai-head"><div class="ai-dot"></div><span id="ai-mode-lbl">데모 모드 — API 키 입력 시 실제 답변</span></div>
+        <div class="ai-msgs" id="mdl-ai-msgs">
+          <div class="ai-msg bot">안녕하세요! 이 연구실에 대해 뭐든 물어보세요 😊</div>
+        </div>
+        <div class="ai-input-row">
+          <input class="ai-input" id="mdl-ai-input" placeholder="궁금한 점 입력...">
+          <button class="ai-send" onclick="sendMdlAi()">↑</button>
+        </div>
+      </div>
+      <!-- Actions -->
+      <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">
+        <button class="btn-sm btn-primary" style="flex:2;" onclick="openEmailMdl()">✉️ 컨택 메일 생성</button>
+        <button class="btn-sm btn-outline" onclick="toggleFav(currentLab)">⭐ 저장</button>
+        <button class="btn-sm btn-outline" onclick="toggleCompare(currentLab)">⊕ 비교</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Email Modal -->
+<div class="modal-ov" id="modal-email" onclick="closeMOvBg(event,'modal-email')">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">✉️ 컨택 메일 초안</div>
+      <button class="modal-close" onclick="closeMdl('modal-email')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:.75rem;color:var(--text3);margin-bottom:10px;">✦ [이름]/[학교] 부분만 채워서 바로 전송 가능해요</div>
+      <div class="email-box" id="email-body"></div>
+      <div class="email-btns">
+        <button class="btn-email btn-naver" onclick="openNaver()">📧 네이버</button>
+        <button class="btn-email btn-gmail" onclick="openGmail()">📨 Gmail</button>
+        <button class="btn-email btn-kakao" onclick="openKakao()">💬 카카오</button>
+        <button class="btn-email btn-copy" onclick="copyEmail()">📋 복사</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Compare Modal -->
+<div class="modal-ov" id="modal-compare" onclick="closeMOvBg(event,'modal-compare')">
+  <div class="modal-box" style="max-width:720px;">
+    <div class="modal-head">
+      <div class="modal-title">⊕ 연구실 비교</div>
+      <button class="modal-close" onclick="closeMdl('modal-compare')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="cmp-grid" id="cmp-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- About Modal (NEW) -->
+<div class="modal-ov" id="modal-about" onclick="closeMOvBg(event,'modal-about')">
+  <div class="modal-box" style="max-width:480px;">
+    <div class="modal-head">
+      <div class="modal-title">🧭 ResearchPath v2</div>
+      <button class="modal-close" onclick="closeMdl('modal-about')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:.84rem;line-height:1.75;color:var(--text2);">
+        <p style="margin-bottom:10px;">이공계 학부생이 <strong>인맥 없이</strong>도 최고의 연구실을 찾을 수 있도록 만들었습니다.</p>
+        <p style="margin-bottom:10px;">교수 홈페이지, 구글 스칼라, 에브리타임을 돌아다닐 필요 없이 — <strong>5축 결정 카드</strong> 하나로 비교하고, <strong>컨택 메일</strong>까지 자동 생성해요.</p>
+        <div style="background:rgba(200,240,230,.25);border-radius:var(--r-sm);padding:12px 14px;border:1px solid rgba(140,200,220,.3);margin-top:10px;">
+          <div style="font-size:.72rem;font-weight:800;color:var(--mint3);margin-bottom:4px;">Made by</div>
+          <div style="font-weight:900;">이혜원 (Hyewon Lee)</div>
+          <div style="font-size:.76rem;color:var(--text3);">용인대학교 AI·빅데이터학과</div>
+          <div style="font-size:.76rem;color:var(--sky3);margin-top:4px;">nina829@naver.com</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Admin Login Modal -->
+<div class="modal-ov" id="modal-admin-login" onclick="closeMOvBg(event,'modal-admin-login')">
+  <div class="modal-box" style="max-width:360px;">
+    <div class="modal-head">
+      <div class="modal-title">🔐 관리자 로그인</div>
+      <button class="modal-close" onclick="closeMdl('modal-admin-login')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input class="form-input" id="adm-pw" type="password" placeholder="비밀번호 입력..." style="width:100%;margin-bottom:10px;" onkeydown="if(event.key==='Enter')adminLogin()">
+      <button class="btn-sm btn-primary" style="width:100%;" onclick="adminLogin()">로그인</button>
+      <div style="font-size:.69rem;color:var(--text3);margin-top:7px;">기본 비밀번호: admin1234</div>
+    </div>
+  </div>
+</div>
+
+<!-- Admin Panel Modal -->
+<div class="modal-ov" id="modal-admin" onclick="closeMOvBg(event,'modal-admin')">
+  <div class="modal-box" style="max-width:700px;">
+    <div class="modal-head">
+      <div class="modal-title">⚙️ 연구실 데이터 관리</div>
+      <button class="modal-close" onclick="closeMdl('modal-admin')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="adm-lab-list" id="adm-lab-list"></div>
+      <button class="btn-sm btn-primary" style="width:auto;padding:9px 20px;" onclick="showAddForm()">+ 새 연구실 추가</button>
+      <div id="adm-form" style="display:none;margin-top:14px;">
+        <div class="adm-form-grid">
+          <div class="form-grp"><div class="form-label">연구실 이름 *</div><input class="form-input" id="f-name"></div>
+          <div class="form-grp"><div class="form-label">교수명 *</div><input class="form-input" id="f-prof"></div>
+          <div class="form-grp"><div class="form-label">소속 학과</div><input class="form-input" id="f-dept"></div>
+          <div class="form-grp"><div class="form-label">태그 (쉼표구분)</div><input class="form-input" id="f-tags"></div>
+          <div class="form-grp full"><div class="form-label">연구 방향</div><input class="form-input" id="f-dir"></div>
+          <div class="form-grp full"><div class="form-label">대표 논문</div><input class="form-input" id="f-paper"></div>
+          <div class="form-grp full"><div class="form-label">구글 스칼라 키워드</div><input class="form-input" id="f-scholar"></div>
+          <div class="form-grp full"><div class="form-label">논문 한 줄 요약</div><input class="form-input" id="f-papersum"></div>
+          <div class="form-grp full"><div class="form-label">연결 진로</div><input class="form-input" id="f-career"></div>
+          <div class="form-grp full"><div class="form-label">계약대학원/산학</div><input class="form-input" id="f-contract"></div>
+          <div class="form-grp full"><div class="form-label">진로 축 (industry/researcher/startup)</div><input class="form-input" id="f-caxis" placeholder="industry"></div>
+          <div class="form-grp full"><div class="form-label">학과 계열 (이공계/CS/AI/바이오...)</div><input class="form-input" id="f-dept-cat"></div>
+          <div class="form-grp full"><div class="form-label">홈페이지 URL</div><input class="form-input" id="f-url" type="url" placeholder="https://"></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button class="btn-sm btn-primary" style="flex:none;padding:9px 22px;" onclick="saveLabForm()">저장</button>
+          <button class="btn-sm btn-outline" style="flex:none;padding:9px 16px;" onclick="document.getElementById('adm-form').style.display='none'">취소</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- ══════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════ -->
+<script>
+// ═══════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════
+const DEFAULT_LABS = [
+  {
+    id:'l1',name:'VIS Lab',professor:'김민준 교수',dept:'컴퓨터공학과',deptCat:'CS',
+    tags:['컴퓨터비전','딥러닝','의료영상','객체탐지'],
+    direction:'의료 영상 분석을 위한 딥러닝 모델 개발 및 실시간 객체 탐지 연구',
+    paper:'Self-Supervised Medical Image Segmentation with Contrastive Learning',
+    scholarKw:'medical image segmentation contrastive learning',
+    paperSummary:'라벨 없이 의료 이미지를 스스로 학습 — CT 판독 정확도 12% 향상',
+    career:'의료AI 스타트업, 삼성메디슨, 뷰노, 루닛',
+    contract:'삼성서울병원 AI연구소 계약대학원 연계',
+    homepage:'',careerAxis:'industry',matchScore:88,isNew:true
+  },
+  {
+    id:'l2',name:'NLP & LLM Lab',professor:'이수연 교수',dept:'인공지능학과',deptCat:'AI',
+    tags:['자연어처리','LLM','챗봇','RAG'],
+    direction:'대규모 언어모델(LLM) 파인튜닝 및 한국어 특화 NLP 시스템 개발',
+    paper:'KoRAG: Retrieval-Augmented Generation for Korean Legal Documents',
+    scholarKw:'Korean LLM RAG legal',
+    paperSummary:'한국어 법률문서 최적화 RAG 시스템 — 질문 응답 정확도 91%',
+    career:'네이버 클로바, 카카오 AI랩, 법률AI 스타트업',
+    contract:'네이버 계약대학원 연계',
+    homepage:'',careerAxis:'industry',matchScore:82,isNew:false
+  },
+  {
+    id:'l3',name:'AutoML & Data Lab',professor:'박정호 교수',dept:'통계데이터학과',deptCat:'데이터',
+    tags:['머신러닝','빅데이터','AutoML','데이터분석'],
+    direction:'AutoML 파이프라인 자동화 및 이상탐지 알고리즘 연구',
+    paper:'Efficient Neural Architecture Search for Tabular Data',
+    scholarKw:'AutoML neural architecture search tabular',
+    paperSummary:'표형 데이터 최적 신경망 자동 탐색 — 탐색 시간 60% 단축',
+    career:'데이터 사이언티스트, ML엔지니어, 금융 AI팀',
+    contract:'',homepage:'',careerAxis:'researcher',matchScore:75,isNew:false
+  },
+  {
+    id:'l4',name:'Robotics & Control Lab',professor:'최현우 교수',dept:'기계공학과',deptCat:'이공계',
+    tags:['로보틱스','강화학습','자율주행','제어시스템'],
+    direction:'심층 강화학습 기반 로봇 제어 및 자율 이동 플랫폼 개발',
+    paper:'Deep RL-Based Adaptive Control for Multi-DOF Robotic Arms',
+    scholarKw:'deep reinforcement learning robotic arm control',
+    paperSummary:'강화학습 로봇팔이 새 환경에 즉시 적응 — 산업 현장 적용 입증',
+    career:'현대로보틱스, 두산로봇, 자율주행 스타트업',
+    contract:'현대자동차 계약대학원 연계',
+    homepage:'',careerAxis:'industry',matchScore:70,isNew:false
+  },
+  {
+    id:'l5',name:'BioAI Lab',professor:'정세영 교수',dept:'바이오정보학과',deptCat:'바이오',
+    tags:['생물정보학','단백질구조','유전체','딥러닝'],
+    direction:'AlphaFold 기반 단백질 구조 예측 및 신약 타겟 발굴',
+    paper:'Generative AI for Novel Drug Target Discovery via Protein Interaction Graphs',
+    scholarKw:'protein structure prediction drug discovery generative AI',
+    paperSummary:'생성형 AI로 신약 후보 단백질 발굴 — 실험 비용 70% 절감 가능',
+    career:'제약회사 AI팀, 바이오 스타트업, 박사 진학',
+    contract:'한국파스퇴르연구소 인턴십 연계',
+    homepage:'',careerAxis:'researcher',matchScore:65,isNew:false
+  },
+  {
+    id:'l6',name:'XR & HCI Lab',professor:'오지민 교수',dept:'소프트웨어학과',deptCat:'CS',
+    tags:['메타버스','AR/VR','HCI','인터랙션'],
+    direction:'확장현실(XR) 환경에서의 몰입형 UI/UX 연구',
+    paper:'Embodied Interaction in Social VR: Presence and Co-presence Factors',
+    scholarKw:'social VR embodied interaction presence HCI',
+    paperSummary:'소셜 VR에서 함께 있는 느낌을 높이는 인터랙션 설계 원칙',
+    career:'메타 UX팀, 게임 회사, 메타버스 스타트업',
+    contract:'',homepage:'',careerAxis:'startup',matchScore:60,isNew:false
+  }
+];
+
+const CAREER_OPTIONS = [
+  {id:'any',   icon:'🌐',label:'상관없음',  sub:'모든 진로 보기'},
+  {id:'industry',icon:'🏢',label:'취업 연계', sub:'계약대학원·산학장학'},
+  {id:'researcher',icon:'🔬',label:'박사·연구자',sub:'학술 경력 목표'},
+  {id:'startup',icon:'🚀',label:'창업·스타트업',sub:'창업 연계 우선'},
+];
+
+const QUIZ = [
+  {q:'연구할 때 나는?',opts:[
+    {l:'📊 데이터 분석·패턴 발굴',a:'data'},
+    {l:'⚙️ 시스템 설계·구현',a:'system'},
+    {l:'🔬 이론·수식 파기',a:'theory'},
+    {l:'🎨 사용자 경험·디자인',a:'ux'},
+  ]},
+  {q:'논문에서 가장 흥미로운 부분은?',opts:[
+    {l:'🧪 실험 결과 테이블',a:'data'},
+    {l:'🏗️ 아키텍처 다이어그램',a:'system'},
+    {l:'📐 수학적 증명',a:'theory'},
+    {l:'👤 사용자 연구 설계',a:'ux'},
+  ]},
+  {q:'졸업 후 꿈꾸는 미래는?',opts:[
+    {l:'💼 빅테크 취업',a:'industry'},
+    {l:'🎓 교수·연구원',a:'academic'},
+    {l:'🌱 내 스타트업 창업',a:'startup'},
+    {l:'🤷 아직 고민 중',a:'any'},
+  ]},
+];
+
+const KW_LIST = [
+  '컴퓨터비전','자연어처리','강화학습','딥러닝','머신러닝',
+  '빅데이터','로보틱스','생물정보학','AR/VR','LLM',
+  'AutoML','의료AI','자율주행','메타버스','HCI','추천시스템','MLOps',
+];
+
+const DEPT_CATS = ['전체','CS','AI','데이터','바이오','이공계'];
+
+const DEMO_REPLIES = [
+  '이 연구실은 산업계 연계가 강해 취업 연결이 매우 좋습니다! 💼',
+  '대표 논문은 SOTA 성능을 달성했으며, 후속 연구도 활발합니다 🚀',
+  '학부연구생으로 시작해 석사로 전환하는 경우가 많은 랩이에요.',
+  '계약대학원 연계 시 해당 기업 취업률이 매우 높습니다 🏢',
+  '세미나 중심으로 운영되며 논문 리뷰 문화가 활발합니다 📚',
+  '교수님 스타일은 자율성을 중시하며 학생 주도 연구를 장려해요 ✨',
+];
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let labs = JSON.parse(localStorage.getItem('rp-labs-v2') || 'null') || DEFAULT_LABS;
+let favorites = JSON.parse(localStorage.getItem('rp-favs') || '[]');
+let selectedKw = new Set();
+let selectedCareer = 'any';
+let selectedDept = '전체';
+let quizAnswers = {};
+let currentLab = null;
+let compareLabs = [];
+let filteredLabs = [];
+let uploadedFiles = [];
+let translationResult = '';
+let editingLabId = null;
+let demoIdx = 0;
+
+// ═══════════════════════════════════════
+// BACKGROUND CANVAS (animated)
+// ═══════════════════════════════════════
+(function initBg(){
+  const cv = document.getElementById('canvas-bg');
+  const ctx = cv.getContext('2d');
+  let W, H, blobs;
+  function resize(){
+    W = cv.width = window.innerWidth;
+    H = cv.height = window.innerHeight;
+  }
+  function makeBlobs(){
+    return [
+      {x:W*.08,y:H*.1,r:220,vx:.18,vy:.12,col:'rgba(200,245,236,0.42)'},
+      {x:W*.85,y:H*.15,r:180,vx:-.14,vy:.18,col:'rgba(194,228,247,0.40)'},
+      {x:W*.5,y:H*.7,r:260,vx:.12,vy:-.1,col:'rgba(255,214,231,0.32)'},
+      {x:W*.2,y:H*.8,r:150,vx:.2,vy:.08,col:'rgba(255,244,194,0.36)'},
+      {x:W*.75,y:H*.65,r:190,vx:-.1,vy:-.14,col:'rgba(232,220,250,0.34)'},
+    ];
+  }
+  resize();
+  blobs = makeBlobs();
+  window.addEventListener('resize',()=>{resize();blobs=makeBlobs();});
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    blobs.forEach(b=>{
+      b.x += b.vx; b.y += b.vy;
+      if(b.x<-b.r||b.x>W+b.r) b.vx*=-1;
+      if(b.y<-b.r||b.y>H+b.r) b.vy*=-1;
+      const g = ctx.createRadialGradient(b.x,b.y,0,b.x,b.y,b.r);
+      g.addColorStop(0,b.col);
+      g.addColorStop(1,'rgba(255,255,255,0)');
+      ctx.beginPath();
+      ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
+      ctx.fillStyle=g;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+function init(){
+  renderChips();
+  renderQuiz();
+  renderCareerGrid();
+  renderDeptGrid();
+  loadKeys();
+  setupDrag();
+  updateStatLabs();
+  document.getElementById('mdl-ai-input').addEventListener('keydown',e=>{if(e.key==='Enter')sendMdlAi();});
+}
+
+// ═══════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════
+function switchTab(id){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  // sync desktop nav
+  document.querySelectorAll('.nav-btn').forEach((b,i)=>{
+    b.classList.toggle('active',['rp','tr','fav'][i]===id);
+  });
+  if(id==='fav') renderFavList();
+}
+function setMnb(id){
+  document.querySelectorAll('.mnb').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ═══════════════════════════════════════
+// STEP FLOW
+// ═══════════════════════════════════════
+function showStep(id){
+  ['step-select','step-result'].forEach(s=>{
+    const el=document.getElementById(s);
+    if(el) el.style.display = s===id ? '' : 'none';
+  });
+}
+function updateProgress(){
+  const s0=selectedKw.size>0;
+  const s1=Object.keys(quizAnswers).length>0;
+  const s2=selectedCareer!=='any';
+  const s3=selectedDept!=='전체';
+  const steps=[
+    {c:document.getElementById('sc0'),done:s0,line:null},
+    {c:document.getElementById('sc1'),done:s1,line:document.getElementById('sl01')},
+    {c:document.getElementById('sc2'),done:s2,line:document.getElementById('sl12')},
+    {c:document.getElementById('sc3'),done:s3,line:document.getElementById('sl23')},
+  ];
+  steps.forEach((s,i)=>{
+    s.c.className='step-circle';
+    if(s.done) s.c.classList.add('done');
+    else if(i===steps.findIndex(x=>!x.done)) s.c.classList.add('active');
+    if(s.line) s.line.className='step-line'+(steps[i-1]?.done?' done':'');
+  });
+}
+
+// ═══════════════════════════════════════
+// CHIPS
+// ═══════════════════════════════════════
+function renderChips(){
+  const wrap=document.getElementById('kw-chips');
+  wrap.innerHTML='';
+  KW_LIST.forEach(kw=>{
+    const b=document.createElement('button');
+    b.className='chip'+(selectedKw.has(kw)?' sel':'');
+    b.textContent=kw;
+    b.onclick=()=>toggleKw(kw,b);
+    wrap.appendChild(b);
+  });
+}
+function toggleKw(kw,el){
+  if(selectedKw.has(kw)){selectedKw.delete(kw);el.classList.remove('sel');}
+  else{selectedKw.add(kw);el.classList.add('sel');}
+  updateProgress();
+}
+function toggleCustomRow(){document.getElementById('custom-row').classList.toggle('open');}
+function addCustomKw(){
+  const v=document.getElementById('custom-kw').value.trim();
+  if(!v)return;
+  if(!KW_LIST.includes(v))KW_LIST.push(v);
+  selectedKw.add(v);
+  document.getElementById('custom-kw').value='';
+  document.getElementById('custom-row').classList.remove('open');
+  renderChips();updateProgress();
+}
+
+// ═══════════════════════════════════════
+// QUIZ
+// ═══════════════════════════════════════
+function renderQuiz(){
+  const wrap=document.getElementById('quiz-list');
+  wrap.innerHTML='';
+  QUIZ.forEach((q,qi)=>{
+    const d=document.createElement('div');
+    d.innerHTML=`<div class="quiz-q"><div class="quiz-num">${qi+1}</div>${q.q}</div>
+      <div class="quiz-opts">${q.opts.map((o,oi)=>`<button class="quiz-opt${quizAnswers[qi]===o.a?' sel':''}" id="qo-${qi}-${oi}" onclick="pickQuiz(${qi},${oi},'${o.a}')">${o.l}</button>`).join('')}</div>`;
+    wrap.appendChild(d);
+  });
+}
+function pickQuiz(qi,oi,axis){
+  QUIZ[qi].opts.forEach((_,i)=>document.getElementById(`qo-${qi}-${i}`)?.classList.remove('sel'));
+  document.getElementById(`qo-${qi}-${oi}`)?.classList.add('sel');
+  quizAnswers[qi]=axis;
+  updateProgress();
+}
+
+// ═══════════════════════════════════════
+// CAREER GRID
+// ═══════════════════════════════════════
+function renderCareerGrid(){
+  const wrap=document.getElementById('career-grid');
+  wrap.innerHTML='';
+  CAREER_OPTIONS.forEach(c=>{
+    const d=document.createElement('div');
+    d.className='career-card'+(selectedCareer===c.id?' sel':'');
+    d.innerHTML=`<div class="cc-icon">${c.icon}</div><div class="cc-label">${c.label}</div><div class="cc-sub">${c.sub}</div>`;
+    d.onclick=()=>{selectedCareer=c.id;renderCareerGrid();updateProgress();};
+    wrap.appendChild(d);
+  });
+}
+
+// ═══════════════════════════════════════
+// DEPT FILTER
+// ═══════════════════════════════════════
+function renderDeptGrid(){
+  const wrap=document.getElementById('dept-grid');
+  wrap.innerHTML='';
+  DEPT_CATS.forEach(d=>{
+    const b=document.createElement('button');
+    b.className='dept-chip'+(selectedDept===d?' sel':'');
+    b.textContent=d;
+    b.onclick=()=>{selectedDept=d;renderDeptGrid();updateProgress();};
+    wrap.appendChild(b);
+  });
+}
+
+// ═══════════════════════════════════════
+// MATCH ALGORITHM
+// ═══════════════════════════════════════
+function runMatch(){
+  if(selectedKw.size===0&&Object.keys(quizAnswers).length===0){
+    showToast('관심 분야를 최소 1개 선택해주세요!');return;
+  }
+  const kws=[...selectedKw];
+  filteredLabs = labs
+    .filter(l=>selectedDept==='전체'||l.deptCat===selectedDept)
+    .map(lab=>{
+      let score = lab.matchScore||50;
+      kws.forEach(kw=>{if(lab.tags.some(t=>t.includes(kw)||kw.includes(t)))score+=12;});
+      if(selectedCareer!=='any'&&lab.careerAxis===selectedCareer)score+=18;
+      if(quizAnswers[2]==='industry'&&lab.careerAxis==='industry')score+=8;
+      if(quizAnswers[2]==='academic'&&lab.careerAxis==='researcher')score+=8;
+      if(quizAnswers[2]==='startup'&&lab.careerAxis==='startup')score+=8;
+      if(lab.contract)score+=5;
+      return{...lab,computedScore:Math.min(score,99)};
+    })
+    .sort((a,b)=>b.computedScore-a.computedScore);
+
+  if(!filteredLabs.length){
+    showToast('조건에 맞는 연구실이 없어요. 학과 계열을 전체로 해보세요.');return;
+  }
+  renderLabCards(filteredLabs);
+  renderFilterBar();
+  document.getElementById('result-sub-text').textContent=`${filteredLabs.length}개 연구실 · 매칭 점수 기준`;
+  showStep('step-result');
+  setTimeout(animateBars,120);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function sortCards(by,el){
+  document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  const sorted=[...filteredLabs];
+  if(by==='score') sorted.sort((a,b)=>b.computedScore-a.computedScore);
+  else if(by==='contract') sorted.sort((a,b)=>(b.contract?1:0)-(a.contract?1:0));
+  else if(by==='alpha') sorted.sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+  renderLabCards(sorted);setTimeout(animateBars,80);
+}
+
+function renderLabCards(list){
+  const wrap=document.getElementById('lab-cards');
+  if(!list.length){
+    wrap.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:50px;color:var(--text3);">조건에 맞는 연구실이 없어요.</div>';
+    return;
+  }
+  wrap.innerHTML=list.map(lab=>`
+    <div class="lab-card" id="card-${lab.id}" onclick="openDecision('${lab.id}')">
+      ${lab.isNew?'<div class="new-ribbon">NEW</div>':''}
+      <button class="bookmark-btn${favorites.includes(lab.id)?' saved':''}" id="bm-${lab.id}" onclick="event.stopPropagation();toggleFavById('${lab.id}')">
+        ${favorites.includes(lab.id)?'⭐':'☆'}
+      </button>
+      <div class="lab-card-head">
+        <div>
+          <div class="lab-name">${lab.name}</div>
+          <div class="lab-prof">${lab.professor} · ${lab.dept}</div>
+        </div>
+        <div class="match-pill">${lab.computedScore}%</div>
+      </div>
+      <div class="match-bar-bg"><div class="match-bar" id="bar-${lab.id}" style="width:0%"></div></div>
+      <div class="lab-summary">${lab.paperSummary}</div>
+      <div class="lab-tags">${lab.tags.map(t=>`<span class="lab-tag">${t}</span>`).join('')}</div>
+      <div class="lab-meta">
+        <div class="meta-item"><div class="meta-label">💼 진로</div><div class="meta-val">${lab.career.split(',')[0]}</div></div>
+        <div class="meta-item"><div class="meta-label">🏛️ 계약대학원</div><div class="meta-val">${lab.contract||'정보 없음'}</div></div>
+      </div>
+      <div class="lab-card-btns">
+        <button class="btn-sm btn-outline" onclick="event.stopPropagation();toggleCompare(labs.find(l=>l.id==='${lab.id}'))">⊕ 비교</button>
+        <button class="btn-sm btn-primary" onclick="event.stopPropagation();openDecision('${lab.id}')">결정카드 →</button>
+      </div>
+    </div>
+  `).join('');
+}
+function animateBars(){
+  filteredLabs.forEach(lab=>{
+    const b=document.getElementById('bar-'+lab.id);
+    if(b)setTimeout(()=>b.style.width=lab.computedScore+'%',60);
+  });
+}
+
+// ═══════════════════════════════════════
+// FILTER BAR
+// ═══════════════════════════════════════
+function renderFilterBar(){
+  const allTags=[...new Set(labs.flatMap(l=>l.tags))];
+  const bar=document.getElementById('filter-bar');
+  bar.innerHTML='<button class="filter-chip active" onclick="filterTag(null,this)">전체</button>'
+    +allTags.slice(0,7).map(t=>`<button class="filter-chip" onclick="filterTag('${t}',this)">${t}</button>`).join('');
+}
+function filterTag(tag,el){
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  const list=tag?filteredLabs.filter(l=>l.tags.includes(tag)):filteredLabs;
+  renderLabCards(list);setTimeout(animateBars,80);
+}
+
+// ═══════════════════════════════════════
+// DECISION CARD MODAL
+// ═══════════════════════════════════════
+function openDecision(id){
+  const lab=labs.find(l=>l.id===id);if(!lab)return;
+  currentLab=lab;
+  document.getElementById('mdl-lab-name').textContent=lab.name;
+  document.getElementById('mdl-lab-sub').textContent=lab.professor+' · '+lab.dept;
+  document.getElementById('mdl-paper').textContent=lab.paper;
+  document.getElementById('mdl-paper-sum').textContent=lab.paperSummary;
+  document.getElementById('mdl-scholar').href='https://scholar.google.com/scholar?q='+encodeURIComponent(lab.scholarKw||lab.paper);
+  renderDcAxes(lab);
+  drawRadar(lab);
+  drawScoreRing(lab.computedScore||lab.matchScore||75);
+  // Reset AI messages
+  document.getElementById('mdl-ai-msgs').innerHTML='<div class="ai-msg bot">안녕하세요! 이 연구실에 대해 뭐든 물어보세요 😊</div>';
+  openMdl('modal-decision');
+}
+
+function renderDcAxes(lab){
+  const axes=[
+    {icon:'🔬',label:'연구 분야',val:lab.tags.slice(0,2).join(', ')},
+    {icon:'📄',label:'대표 논문',val:lab.paper.length>42?lab.paper.slice(0,42)+'…':lab.paper},
+    {icon:'💼',label:'연결 진로',val:lab.career.split(',')[0]},
+    {icon:'🏛️',label:'계약대학원',val:lab.contract||'해당 없음'},
+    {icon:'🌐',label:'학과/계열',val:lab.dept},
+  ];
+  document.getElementById('dc-axes').innerHTML=axes.map(a=>`
+    <div class="dc-axis">
+      <div class="dc-axis-icon">${a.icon}</div>
+      <div class="dc-axis-label">${a.label}</div>
+      <div class="dc-axis-val">${a.val}</div>
+    </div>
+  `).join('');
+}
+
+function drawScoreRing(score){
+  const cv=document.getElementById('score-ring');
+  const ctx=cv.getContext('2d');
+  const cx=50,cy=50,r=38;
+  ctx.clearRect(0,0,100,100);
+  // bg ring
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.strokeStyle='rgba(150,200,240,0.18)';ctx.lineWidth=8;ctx.stroke();
+  // score arc
+  const pct=score/100;
+  ctx.beginPath();
+  ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+Math.PI*2*pct);
+  const grad=ctx.createLinearGradient(cx-r,cy,cx+r,cy);
+  grad.addColorStop(0,'#5ecfb8');grad.addColorStop(1,'#5ab4e8');
+  ctx.strokeStyle=grad;ctx.lineWidth=8;ctx.lineCap='round';ctx.stroke();
+  // text
+  ctx.fillStyle='#1a2340';ctx.font='bold 16px Pretendard,sans-serif';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(score+'%',cx,cy-5);
+  ctx.fillStyle='#8a9abf';ctx.font='10px Pretendard,sans-serif';
+  ctx.fillText('매칭',cx,cy+9);
+}
+
+function drawRadar(lab){
+  const cv=document.getElementById('radar-cv');
+  const ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height,cx=W/2,cy=H/2,r=76;
+  ctx.clearRect(0,0,W,H);
+  const labels=['연구열정','논문성과','취업연계','계약대학원','AI연계'];
+  const vals=[
+    0.85,0.78,
+    lab.careerAxis==='industry'?0.92:0.5,
+    lab.contract?0.88:0.22,
+    lab.tags.some(t=>['딥러닝','LLM','머신러닝','AutoML'].includes(t))?0.9:0.5
+  ];
+  const N=5;
+  const sa=-Math.PI/2;
+  const step=Math.PI*2/N;
+  // grid rings
+  [.25,.5,.75,1].forEach(g=>{
+    ctx.beginPath();
+    for(let i=0;i<=N;i++){
+      const a=sa+i*step;
+      const x=cx+r*g*Math.cos(a),y=cy+r*g*Math.sin(a);
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.strokeStyle='rgba(140,190,240,0.18)';ctx.lineWidth=1;ctx.stroke();
+  });
+  // spokes
+  for(let i=0;i<N;i++){
+    const a=sa+i*step;
+    ctx.beginPath();ctx.moveTo(cx,cy);
+    ctx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a));
+    ctx.strokeStyle='rgba(140,190,240,0.22)';ctx.lineWidth=1;ctx.stroke();
+  }
+  // fill
+  ctx.beginPath();
+  for(let i=0;i<=N;i++){
+    const v=vals[i%N],a=sa+i*step;
+    const x=cx+r*v*Math.cos(a),y=cy+r*v*Math.sin(a);
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  }
+  const fg=ctx.createRadialGradient(cx,cy,0,cx,cy,r);
+  fg.addColorStop(0,'rgba(94,207,184,0.35)');fg.addColorStop(1,'rgba(90,180,232,0.12)');
+  ctx.fillStyle=fg;ctx.fill();
+  ctx.strokeStyle='rgba(94,207,184,0.8)';ctx.lineWidth=2;ctx.stroke();
+  // dots
+  for(let i=0;i<N;i++){
+    const v=vals[i],a=sa+i*step;
+    const x=cx+r*v*Math.cos(a),y=cy+r*v*Math.sin(a);
+    ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);
+    ctx.fillStyle='rgba(90,180,200,0.95)';ctx.fill();
+  }
+  // labels
+  ctx.font='9px Pretendard,sans-serif';ctx.fillStyle='#8a9abf';ctx.textAlign='center';
+  for(let i=0;i<N;i++){
+    const a=sa+i*step;
+    const x=cx+(r+16)*Math.cos(a),y=cy+(r+16)*Math.sin(a);
+    ctx.fillText(labels[i],x,y+3);
+  }
+}
+
+// ═══════════════════════════════════════
+// EMAIL
+// ═══════════════════════════════════════
+function openEmailMdl(){
+  if(!currentLab)return;
+  const lab=currentLab;
+  const kw=[...selectedKw].slice(0,3).join(', ')||lab.tags.slice(0,2).join(', ');
+  const body=`안녕하세요, 교수님.
+
+저는 [학교] [학과] [학년] [이름]이라고 합니다.
+교수님의 ${lab.name}에서 진행 중인 "${lab.direction}" 연구에 깊은 관심을 갖고 연락드립니다.
+
+특히 "${lab.paper}" 논문에서 ${lab.paperSummary} 부분이 인상 깊었습니다.
+
+저는 현재 ${kw} 분야에 관심을 갖고 공부 중이며, 졸업 후 ${lab.career.split(',')[0]} 방향으로 진로를 목표하고 있습니다.
+
+학부연구생 또는 대학원 진학 기회가 있다면, 짧게 면담 부탁드려도 될까요?
+
+감사합니다.
+
+[이름] 드림`;
+  document.getElementById('email-body').textContent=body;
+  closeMdl('modal-decision');
+  openMdl('modal-email');
+  launchConfetti();
+}
+function openNaver(){
+  const b=encodeURIComponent(document.getElementById('email-body').textContent);
+  const s=encodeURIComponent(`[연구실 컨택] ${currentLab?.name||''} — 관심 학부생입니다`);
+  window.open(`https://mail.naver.com/write?subject=${s}&body=${b}`,'_blank');
+}
+function openGmail(){
+  const b=encodeURIComponent(document.getElementById('email-body').textContent);
+  const s=encodeURIComponent(`[연구실 컨택] ${currentLab?.name||''} — 관심 학부생입니다`);
+  window.open(`https://mail.google.com/mail/?view=cm&fs=1&su=${s}&body=${b}`,'_blank');
+}
+function openKakao(){
+  const text=document.getElementById('email-body').textContent;
+  navigator.clipboard.writeText(text).then(()=>showToast('카카오톡에 붙여넣기 하세요! 📋'));
+}
+function copyEmail(){
+  navigator.clipboard.writeText(document.getElementById('email-body').textContent)
+    .then(()=>showToast('✓ 클립보드에 복사됐어요!'));
+}
+
+// ═══════════════════════════════════════
+// AI CHAT
+// ═══════════════════════════════════════
+async function sendMdlAi(){
+  const inp=document.getElementById('mdl-ai-input');
+  const msg=inp.value.trim();if(!msg)return;
+  inp.value='';
+  const msgs=document.getElementById('mdl-ai-msgs');
+  msgs.innerHTML+=`<div class="ai-msg user">${msg}</div>`;
+  // typing indicator
+  const typId='typing-'+Date.now();
+  msgs.innerHTML+=`<div class="ai-msg bot ai-typing" id="${typId}"><span></span><span></span><span></span></div>`;
+  msgs.scrollTop=msgs.scrollHeight;
+  const apiKey=localStorage.getItem('rp-ant-key');
+  if(apiKey&&currentLab){
+    try{
+      const res=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'x-api-key':apiKey,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:400,
+          system:`You are a helpful Korean assistant for an undergraduate student exploring the research lab "${currentLab?.name}". Lab: ${JSON.stringify(currentLab)}. Reply in Korean concisely.`,
+          messages:[{role:'user',content:msg}]})
+      });
+      const d=await res.json();
+      document.getElementById(typId)?.remove();
+      const reply=d.content?.[0]?.text||'답변을 가져올 수 없었어요.';
+      msgs.innerHTML+=`<div class="ai-msg bot">${reply}</div>`;
+    }catch(e){
+      document.getElementById(typId)?.remove();
+      msgs.innerHTML+=`<div class="ai-msg bot">🤖 ${DEMO_REPLIES[demoIdx++%DEMO_REPLIES.length]}</div>`;
+    }
+  }else{
+    setTimeout(()=>{
+      document.getElementById(typId)?.remove();
+      msgs.innerHTML+=`<div class="ai-msg bot">🤖 ${DEMO_REPLIES[demoIdx++%DEMO_REPLIES.length]}</div>`;
+      msgs.scrollTop=msgs.scrollHeight;
+    },900);
+  }
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+// ═══════════════════════════════════════
+// FAVORITES
+// ═══════════════════════════════════════
+function toggleFav(lab){
+  if(!lab)return;
+  toggleFavById(lab.id);
+  showToast(favorites.includes(lab.id)?'⭐ 즐겨찾기 저장':'즐겨찾기에서 제거됨');
+}
+function toggleFavById(id){
+  const idx=favorites.indexOf(id);
+  if(idx>=0) favorites.splice(idx,1);
+  else favorites.push(id);
+  localStorage.setItem('rp-favs',JSON.stringify(favorites));
+  // Update bookmark btn if visible
+  const bm=document.getElementById('bm-'+id);
+  if(bm){bm.classList.toggle('saved',favorites.includes(id));bm.textContent=favorites.includes(id)?'⭐':'☆';}
+}
+function renderFavList(){
+  const wrap=document.getElementById('fav-list');
+  const favLabs=labs.filter(l=>favorites.includes(l.id));
+  if(!favLabs.length){
+    wrap.innerHTML=`<div class="glass fav-empty"><div class="fav-icon">⭐</div>아직 저장된 연구실이 없어요.<br>결정카드에서 ⭐ 버튼을 눌러 저장해보세요.</div>`;
+    return;
+  }
+  // Reuse lab card rendering
+  const tmp=filteredLabs;
+  filteredLabs=favLabs.map(l=>({...l,computedScore:l.matchScore||75}));
+  wrap.innerHTML='<div class="lab-grid" id="lab-cards-fav"></div>';
+  const grid=wrap.querySelector('#lab-cards-fav');
+  grid.innerHTML=filteredLabs.map(lab=>`
+    <div class="lab-card" onclick="openDecision('${lab.id}')">
+      <button class="bookmark-btn saved" onclick="event.stopPropagation();toggleFavById('${lab.id}');renderFavList()">⭐</button>
+      <div class="lab-card-head">
+        <div><div class="lab-name">${lab.name}</div><div class="lab-prof">${lab.professor} · ${lab.dept}</div></div>
+        <div class="match-pill">${lab.computedScore}%</div>
+      </div>
+      <div class="lab-summary">${lab.paperSummary}</div>
+      <div class="lab-tags">${lab.tags.map(t=>`<span class="lab-tag">${t}</span>`).join('')}</div>
+      <div class="lab-card-btns">
+        <button class="btn-sm btn-primary" onclick="event.stopPropagation();openDecision('${lab.id}')">결정카드 →</button>
+      </div>
+    </div>
+  `).join('');
+  filteredLabs=tmp;
+}
+
+// ═══════════════════════════════════════
+// COMPARE
+// ═══════════════════════════════════════
+function toggleCompare(lab){
+  if(!lab)return;
+  const idx=compareLabs.findIndex(l=>l.id===lab.id);
+  if(idx>=0) compareLabs.splice(idx,1);
+  else{
+    if(compareLabs.length>=2){showToast('최대 2개까지 비교 가능해요');return;}
+    compareLabs.push(lab);
+  }
+  const tray=document.getElementById('compare-tray');
+  const names=document.getElementById('compare-names');
+  if(compareLabs.length>0){
+    tray.classList.add('show');
+    names.innerHTML=compareLabs.map(l=>`<span class="compare-chip-nm">${l.name}</span>`).join('');
+  }else tray.classList.remove('show');
+}
+function clearCompare(){compareLabs=[];document.getElementById('compare-tray').classList.remove('show');}
+function openCompareModal(){
+  if(compareLabs.length<2){showToast('연구실 2개를 선택해주세요');return;}
+  const rows=['연구 분야','대표 논문','진로 연결','계약대학원','교수명','학과','계열'];
+  const vals=[
+    [compareLabs[0].tags.join(', '),compareLabs[1].tags.join(', ')],
+    [compareLabs[0].paper,compareLabs[1].paper],
+    [compareLabs[0].career,compareLabs[1].career],
+    [compareLabs[0].contract||'해당 없음',compareLabs[1].contract||'해당 없음'],
+    [compareLabs[0].professor,compareLabs[1].professor],
+    [compareLabs[0].dept,compareLabs[1].dept],
+    [compareLabs[0].deptCat||'-',compareLabs[1].deptCat||'-'],
+  ];
+  document.getElementById('cmp-content').innerHTML=`
+    <div>
+      <div class="cmp-col-title">${compareLabs[0].name}</div>
+      ${rows.map((r,i)=>`<div class="cmp-row"><div class="cmp-row-label">${r}</div><div class="cmp-row-val">${vals[i][0]}</div></div>`).join('')}
+    </div>
+    <div>
+      <div class="cmp-col-title">${compareLabs[1].name}</div>
+      ${rows.map((r,i)=>`<div class="cmp-row"><div class="cmp-row-label">${r}</div><div class="cmp-row-val">${vals[i][1]}</div></div>`).join('')}
+    </div>
+  `;
+  openMdl('modal-compare');
+}
+
+// ═══════════════════════════════════════
+// ADMIN
+// ═══════════════════════════════════════
+function openAdmin(){openMdl('modal-admin-login');}
+function adminLogin(){
+  if(document.getElementById('adm-pw').value==='admin1234'){
+    closeMdl('modal-admin-login');
+    renderAdmList();
+    openMdl('modal-admin');
+    document.getElementById('adm-pw').value='';
+  }else showToast('비밀번호가 틀렸어요');
+}
+function renderAdmList(){
+  document.getElementById('adm-lab-list').innerHTML=labs.map(l=>`
+    <div class="adm-item">
+      <div><div class="adm-name">${l.name}</div><div style="font-size:.7rem;color:var(--text3);">${l.professor}</div></div>
+      <div class="adm-btns">
+        <button class="btn-edit" onclick="editLab('${l.id}')">수정</button>
+        <button class="btn-del" onclick="delLab('${l.id}')">삭제</button>
+      </div>
+    </div>
+  `).join('');
+}
+function showAddForm(){
+  editingLabId=null;
+  ['f-name','f-prof','f-dept','f-tags','f-dir','f-paper','f-scholar','f-papersum','f-career','f-contract','f-caxis','f-dept-cat','f-url'].forEach(id=>{
+    document.getElementById(id).value='';
+  });
+  document.getElementById('adm-form').style.display='';
+}
+function editLab(id){
+  const lab=labs.find(l=>l.id===id);if(!lab)return;
+  editingLabId=id;
+  document.getElementById('f-name').value=lab.name;
+  document.getElementById('f-prof').value=lab.professor;
+  document.getElementById('f-dept').value=lab.dept;
+  document.getElementById('f-tags').value=lab.tags.join(', ');
+  document.getElementById('f-dir').value=lab.direction;
+  document.getElementById('f-paper').value=lab.paper;
+  document.getElementById('f-scholar').value=lab.scholarKw||'';
+  document.getElementById('f-papersum').value=lab.paperSummary;
+  document.getElementById('f-career').value=lab.career;
+  document.getElementById('f-contract').value=lab.contract||'';
+  document.getElementById('f-caxis').value=lab.careerAxis||'industry';
+  document.getElementById('f-dept-cat').value=lab.deptCat||'';
+  document.getElementById('f-url').value=lab.homepage||'';
+  document.getElementById('adm-form').style.display='';
+}
+function saveLabForm(){
+  const name=document.getElementById('f-name').value.trim();
+  const prof=document.getElementById('f-prof').value.trim();
+  if(!name||!prof){showToast('이름과 교수명은 필수입니다');return;}
+  const newLab={
+    id:editingLabId||'l'+Date.now(),
+    name,professor:prof,
+    dept:document.getElementById('f-dept').value.trim(),
+    deptCat:document.getElementById('f-dept-cat').value.trim()||'이공계',
+    tags:document.getElementById('f-tags').value.split(',').map(s=>s.trim()).filter(Boolean),
+    direction:document.getElementById('f-dir').value.trim(),
+    paper:document.getElementById('f-paper').value.trim(),
+    scholarKw:document.getElementById('f-scholar').value.trim(),
+    paperSummary:document.getElementById('f-papersum').value.trim(),
+    career:document.getElementById('f-career').value.trim(),
+    contract:document.getElementById('f-contract').value.trim(),
+    homepage:document.getElementById('f-url').value.trim(),
+    careerAxis:document.getElementById('f-caxis').value.trim()||'industry',
+    matchScore:70,isNew:!editingLabId
+  };
+  if(editingLabId){const idx=labs.findIndex(l=>l.id===editingLabId);if(idx>=0)labs[idx]=newLab;}
+  else labs.push(newLab);
+  saveLabs();renderAdmList();
+  document.getElementById('adm-form').style.display='none';
+  editingLabId=null;
+  updateStatLabs();
+  showToast('저장됐어요! ✓');
+}
+function delLab(id){
+  if(!confirm('삭제할까요?'))return;
+  labs=labs.filter(l=>l.id!==id);
+  saveLabs();renderAdmList();updateStatLabs();
+}
+function saveLabs(){localStorage.setItem('rp-labs-v2',JSON.stringify(labs));}
+function updateStatLabs(){const el=document.getElementById('stat-labs');if(el)el.textContent=labs.length;}
+
+// ═══════════════════════════════════════
+// ABOUT
+// ═══════════════════════════════════════
+function showAbout(){openMdl('modal-about');}
+
+// ═══════════════════════════════════════
+// TRANSLATOR
+// ═══════════════════════════════════════
+function saveKeys(){
+  localStorage.setItem('rp-oai',document.getElementById('oai-key').value);
+  localStorage.setItem('rp-ant',document.getElementById('ant-key').value);
+}
+function loadKeys(){
+  document.getElementById('oai-key').value=localStorage.getItem('rp-oai')||'';
+  document.getElementById('ant-key').value=localStorage.getItem('rp-ant')||'';
+}
+function setupDrag(){
+  const zone=document.getElementById('upload-zone');
+  zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag-on');});
+  zone.addEventListener('dragleave',()=>zone.classList.remove('drag-on'));
+  zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('drag-on');handleFiles(e.dataTransfer.files);});
+}
+function handleFiles(files){
+  [...files].forEach(f=>{if(!uploadedFiles.find(x=>x.name===f.name))uploadedFiles.push(f);});
+  renderFileList();
+}
+function renderFileList(){
+  document.getElementById('file-list').innerHTML=uploadedFiles.map((f,i)=>`<div class="file-chip">📄 ${f.name}<span class="file-rm" onclick="removeFile(${i})">✕</span></div>`).join('');
+}
+function removeFile(i){uploadedFiles.splice(i,1);renderFileList();}
+
+async function startTranslation(){
+  if(!uploadedFiles.length){showToast('PDF 파일을 먼저 업로드해주세요');return;}
+  const key=document.getElementById('oai-key').value.trim();
+  if(!key){showToast('OpenAI API 키를 입력해주세요');return;}
+  const pw=document.getElementById('prog-wrap');
+  pw.classList.add('show');
+  setProgress(8,'PDF 텍스트 추출 중...');
+  document.getElementById('tr-result-wrap').classList.remove('show');
+  try{
+    if(typeof pdfjsLib==='undefined'){
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+      pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+    let fullText='';
+    for(const file of uploadedFiles){
+      const ab=await file.arrayBuffer();
+      const pdf=await pdfjsLib.getDocument({data:ab}).promise;
+      for(let p=1;p<=Math.min(pdf.numPages,20);p++){
+        const page=await pdf.getPage(p);
+        const tc=await page.getTextContent();
+        fullText+=tc.items.map(i=>i.str).join(' ')+'\n';
+      }
+    }
+    setProgress(32,'텍스트 추출 완료. AI 번역 중...');
+    const model=document.getElementById('tr-model').value;
+    const lang=document.getElementById('tr-lang').value;
+    const style=document.getElementById('tr-style').value;
+    const preReq=document.getElementById('pre-req').value;
+    const postReq=document.getElementById('post-req').value;
+    const optF=document.getElementById('opt-formula').checked;
+    const optT=document.getElementById('opt-term').checked;
+    const optS=document.getElementById('opt-summary').checked;
+    const optK=document.getElementById('opt-kw').checked;
+    const optR=document.getElementById('opt-ref').checked;
+    const sysPr=`전문 논문 번역가입니다. 규칙:\n- 번역 언어: ${lang}\n- 스타일: ${style}\n${optF?'- 수식은 __FXXXX__ 형태 보존':''}\n${optT?'- 전문용어 번역어(원문) 병기':''}\n${preReq?'- 추가 요청: '+preReq:''}`;
+    const chunks=chunkText(fullText,2000);
+    let translated='';
+    const maxChunks=Math.min(chunks.length,6);
+    for(let i=0;i<maxChunks;i++){
+      setProgress(32+(i+1)/maxChunks*38,`청크 ${i+1}/${maxChunks} 번역 중...`);
+      const r=await callOAI(key,model,sysPr,'다음 논문 텍스트를 번역:\n\n'+chunks[i]);
+      translated+=r+'\n\n';
+    }
+    if(postReq){setProgress(76,'후처리 적용 중...');translated=await callOAI(key,model,'다음 번역문 수정: '+postReq,translated);}
+    translationResult=translated;
+    document.getElementById('tr-text').textContent=translated;
+    setProgress(85,'요약 생성 중...');
+    if(optS){const s=await callOAI(key,model,'논문을 연구목적/방법론/결과/결론/한계 항목으로 구조화하여 요약해주세요.',fullText.slice(0,3000));renderSum(s);}
+    setProgress(92,'키워드 추출 중...');
+    if(optK){const k=await callOAI(key,model,'핵심 키워드 10-15개를 JSON 배열로만 출력. 예: ["키워드1"]',fullText.slice(0,2000));try{renderKw(JSON.parse(k.match(/\[.*\]/s)?.[0]||'[]'));}catch{renderKw(k.split(',').map(s=>s.trim()));}}
+    setProgress(97,'참고문헌 정리 중...');
+    if(optR){const r=await callOAI(key,model,'참고문헌 목록을 추출하고 번호 순서로 정리해주세요.',fullText.slice(-2000));renderRefs(r);}
+    setProgress(100,'완료!');
+    document.getElementById('tr-result-wrap').classList.add('show');
+    showToast('✓ 번역 완료!');
+    setTimeout(()=>pw.classList.remove('show'),1400);
+  }catch(err){
+    showToast('오류: '+err.message);
+    document.getElementById('prog-wrap').classList.remove('show');
+  }
+}
+async function callOAI(key,model,system,user){
+  const res=await fetch('https://api.openai.com/v1/chat/completions',{
+    method:'POST',headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},
+    body:JSON.stringify({model,messages:[{role:'system',content:system},{role:'user',content:user}],max_tokens:2000})
+  });
+  const d=await res.json();
+  if(d.error)throw new Error(d.error.message);
+  return d.choices?.[0]?.message?.content||'';
+}
+function chunkText(t,sz){const c=[];for(let i=0;i<t.length;i+=sz)c.push(t.slice(i,i+sz));return c;}
+function setProgress(p,t){document.getElementById('prog-fill').style.width=p+'%';document.getElementById('prog-txt').textContent=t;}
+function renderSum(t){
+  const parts=t.split(/\n(?=연구목적|방법론|결과|결론|한계)/);
+  document.getElementById('tr-summary').innerHTML=parts.map(p=>{
+    const[title,...rest]=p.split('\n');
+    return`<div class="sum-block"><h4>${title}</h4><p>${rest.join(' ').trim()}</p></div>`;
+  }).join('');
+}
+function renderKw(kws){
+  const cols=['#c8f5ec','#c2e4f7','#ffd6e7','#fff4c2','#e8dcfa','#fde5d4'];
+  document.getElementById('tr-keywords').innerHTML=kws.map((k,i)=>`<span class="kw-tag" style="background:${cols[i%cols.length]}">${k}</span>`).join('');
+}
+function renderRefs(t){
+  document.getElementById('tr-refs').innerHTML=t.split('\n').filter(l=>l.trim()).map(l=>`<div class="ref-item">${l}</div>`).join('');
+}
+function switchTrTab(tab,el){
+  document.querySelectorAll('.result-tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.result-tab-panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tr-panel-'+tab).classList.add('active');
+}
+async function sendQa(){
+  const inp=document.getElementById('qa-input');
+  const msg=inp.value.trim();if(!msg)return;
+  inp.value='';
+  const msgs=document.getElementById('qa-msgs');
+  msgs.innerHTML+=`<div class="ai-msg user">${msg}</div>`;
+  const key=document.getElementById('oai-key').value;
+  if(!key){msgs.innerHTML+=`<div class="ai-msg bot">API 키가 필요해요 🔑</div>`;return;}
+  try{
+    const r=await callOAI(key,document.getElementById('tr-model').value,
+      '다음 논문 번역본을 바탕으로 질문에 한국어로 답해주세요:\n\n'+translationResult.slice(0,3000),msg);
+    msgs.innerHTML+=`<div class="ai-msg bot">${r}</div>`;
+  }catch(e){msgs.innerHTML+=`<div class="ai-msg bot">오류: ${e.message}</div>`;}
+  msgs.scrollTop=msgs.scrollHeight;
+}
+function dlTxt(){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([translationResult],{type:'text/plain;charset=utf-8'}));
+  a.download='translation.txt';a.click();
+}
+function dlHtml(){
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:sans-serif;line-height:1.85;max-width:800px;margin:40px auto;padding:0 20px;color:#222}</style></head><body><pre style="white-space:pre-wrap">${translationResult}</pre></body></html>`;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([html],{type:'text/html;charset=utf-8'}));
+  a.download='translation.html';a.click();
+}
+
+// ═══════════════════════════════════════
+// CONFETTI
+// ═══════════════════════════════════════
+function launchConfetti(){
+  const cv=document.getElementById('confetti-cv');
+  cv.width=window.innerWidth;cv.height=window.innerHeight;
+  const ctx=cv.getContext('2d');
+  const pieces=Array.from({length:90},()=>({
+    x:Math.random()*cv.width,y:-12,
+    r:3+Math.random()*7,vx:(Math.random()-.5)*4.5,
+    vy:2.5+Math.random()*3.5,col:['#5ecfb8','#5ab4e8','#ffd6e7','#fff4c2','#b89aee','#f9a87a'][Math.floor(Math.random()*6)],
+    rot:Math.random()*360,rv:(Math.random()-.5)*9
+  }));
+  let frame=0;
+  function draw(){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    let alive=false;
+    pieces.forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;p.vy+=0.09;p.rot+=p.rv;
+      if(p.y<cv.height+20)alive=true;
+      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot*Math.PI/180);
+      ctx.fillStyle=p.col;ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*1.6);ctx.restore();
+    });
+    if(alive&&frame++<220)requestAnimationFrame(draw);
+    else ctx.clearRect(0,0,cv.width,cv.height);
+  }
+  draw();
+}
+
+// ═══════════════════════════════════════
+// MODAL UTILS
+// ═══════════════════════════════════════
+function openMdl(id){document.getElementById(id).classList.add('open');}
+function closeMdl(id){document.getElementById(id).classList.remove('open');}
+function closeMOvBg(e,id){if(e.target.id===id)closeMdl(id);}
+
+// ═══════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ═══════════════════════════════════════
+// SCRIPT LOADER
+// ═══════════════════════════════════════
+function loadScript(src){
+  return new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src=src;s.onload=res;s.onerror=rej;
+    document.head.appendChild(s);
+  });
+}
+
+// ─── GO ───────────────────────────────
+init();
+</script>
+</body>
+</html>
